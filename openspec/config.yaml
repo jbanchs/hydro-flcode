@@ -1,0 +1,83 @@
+schema: spec-driven
+project: HYDRO
+persistence: openspec
+initialized: 2026-06-14
+
+context: |
+  Product: Water regulatory intelligence platform for citation-driven compliance knowledge.
+  Tech stack: Python 3.13, FastAPI, Jinja2, SQLite, HTML/CSS/JavaScript, Tailwind CDN, GSAP.
+  Architecture: FastAPI app with routers, services, core config, database module, templates/static assets.
+  Testing: pytest with FastAPI/httpx integration coverage; CI runs python -m pytest.
+  Style: Minimal white-first webapp; retrieval-first regulatory answers from verified citations only.
+
+strict_tdd: true
+
+testing:
+  strict_tdd: true
+  detected: 2026-06-14
+  runner:
+    framework: pytest
+    command: python -m pytest
+    config: pytest.ini
+  layers:
+    unit:
+      available: true
+      tool: pytest
+      evidence: tests/test_frequency_engine.py
+    integration:
+      available: true
+      tool: pytest + FastAPI/httpx
+      evidence: tests/test_api.py, tests/conftest.py
+    e2e:
+      available: false
+      tool: null
+      evidence: No Playwright/Cypress/Selenium-style tool detected.
+  coverage:
+    available: false
+    command: null
+    evidence: pytest-cov or coverage command not detected in requirements, config, or CI.
+  quality:
+    linter:
+      available: false
+      command: null
+    type_checker:
+      available: false
+      command: null
+    formatter:
+      available: false
+      command: null
+  ci:
+    available: true
+    workflow: .github/workflows/ci.yml
+    command: python -m pytest
+    env:
+      HYDRO_DATABASE_PATH: tests/.tmp_hydro_test.db
+      HYDRO_SESSION_SECRET: test-session-secret-with-enough-entropy
+      HYDRO_BOOTSTRAP_ADMIN_PASSWORD: test-admin-password
+      HYDRO_SESSION_COOKIE_SECURE: "0"
+
+rules:
+  proposal:
+    - Include regulatory citation and rollback considerations for risky behavior changes.
+  specs:
+    - Use Given/When/Then for scenarios.
+    - Use RFC 2119 keywords: MUST, SHALL, SHOULD, MAY.
+    - Preserve citation-first behavior; unsupported answers must state they cannot be confirmed.
+  design:
+    - Document service/router/database impact and rationale.
+    - Include sequence diagrams for complex request or retrieval flows.
+  tasks:
+    - Group by phase and keep tasks completable in one focused session.
+    - Keep review slices under 400 changed lines when possible; force chained PR strategy for larger changes.
+  apply:
+    - Follow existing FastAPI router/service patterns.
+    - Keep tests with the code they validate.
+    tdd: true
+    test_command: python -m pytest
+  verify:
+    test_command: python -m pytest
+    build_command: null
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas.
+    - Preserve archived changes as an audit trail.
