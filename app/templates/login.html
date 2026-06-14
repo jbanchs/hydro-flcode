@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in | HYDRO</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-900 flex items-center justify-center p-6">
+  <main class="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl">
+    <div class="mb-8">
+      <div class="h-12 w-12 rounded-2xl bg-sky-100 flex items-center justify-center text-sky-700 font-bold mb-4">H</div>
+      <h1 class="text-3xl font-bold tracking-tight">Sign in to HYDRO</h1>
+      <p class="text-sm text-slate-500 mt-2">Local access is required before regulatory data can be viewed.</p>
+    </div>
+    {% if error %}
+    <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ error }}</div>
+    {% endif %}
+    <form method="post" action="/login" class="space-y-4">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label class="block">
+        <span class="text-sm font-medium text-slate-700">Username</span>
+        <input name="username" autocomplete="username" required class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-sky-100">
+      </label>
+      <label class="block">
+        <span class="text-sm font-medium text-slate-700">Password</span>
+        <input name="password" type="password" autocomplete="current-password" required class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-sky-100">
+      </label>
+      <button class="w-full rounded-xl bg-slate-900 text-white px-4 py-3 font-semibold">Sign in</button>
+    </form>
+  </main>
+</body>
+</html>

@@ -1,0 +1,38 @@
+# Python cache and build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Virtual environments and local env files
+.venv/
+venv/
+env/
+.env
+.env.*
+!.env.example
+
+# Node/opencode local dependencies
+node_modules/
+.opencode/node_modules/
+
+# Local databases and generated archives
+*.db
+*.sqlite
+*.sqlite3
+._Archive/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
