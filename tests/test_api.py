@@ -9,6 +9,48 @@ from app.main import app
 TEST_ADMIN_PASSWORD = "test-admin-password"
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 STATIC_JS_ROOT = PROJECT_ROOT / "app" / "static" / "js"
+REQUIRED_SECURITY_HEADERS = {
+    "x-content-type-options": "nosniff",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+}
+
+
+def assert_browser_security_headers(response):
+    assert response.headers["content-security-policy"]
+    for header_name, expected_value in REQUIRED_SECURITY_HEADERS.items():
+        assert response.headers[header_name] == expected_value
+
+
+def parse_csp_directives(csp):
+    directives = {}
+    for directive in csp.split(";"):
+        directive = directive.strip()
+        if not directive:
+            continue
+        name, *sources = directive.split()
+        directives[name] = sources
+    return directives
+
+
+def assert_current_frontend_csp_allowances(csp):
+    directives = parse_csp_directives(csp)
+    assert directives["default-src"] == ["'self'"]
+    assert directives["script-src"] == [
+        "'self'",
+        "https://cdn.tailwindcss.com",
+        "https://cdnjs.cloudflare.com",
+    ]
+    assert directives["style-src"] == ["'self'", "'unsafe-inline'"]
+    assert directives["img-src"] == ["'self'", "data:"]
+    assert directives["font-src"] == ["'self'", "data:"]
+    assert directives["connect-src"] == ["'self'"]
+    assert directives["object-src"] == ["'none'"]
+    assert directives["base-uri"] == ["'self'"]
+    assert directives["frame-ancestors"] == ["'none'"]
+    assert directives["form-action"] == ["'self'"]
+    assert "https:" not in directives["script-src"]
+    assert "*" not in directives["script-src"]
 
 
 FRONTEND_XSS_PATTERNS = {
@@ -86,6 +128,33 @@ def test_frontend_does_not_use_raw_html_injection():
                     findings.append(f"{relative_path}:{line_number}: {pattern_name}: {line.strip()}")
 
     assert not findings, "Unsafe frontend JavaScript patterns found:\n" + "\n".join(findings)
+
+
+def test_login_response_includes_browser_security_headers():
+    with TestClient(app, follow_redirects=False) as isolated_client:
+        res = isolated_client.get("/login")
+
+    assert res.status_code == 200
+    assert "Sign in" in res.text
+    assert_browser_security_headers(res)
+
+
+def test_authenticated_home_includes_browser_security_headers():
+    with TestClient(app, follow_redirects=False) as isolated_client:
+        login_client(isolated_client)
+        res = isolated_client.get("/")
+
+    assert res.status_code == 200
+    assert "Regulations" in res.text
+    assert_browser_security_headers(res)
+
+
+def test_csp_allows_current_frontend_dependencies_and_blocks_dangerous_capabilities():
+    with TestClient(app, follow_redirects=False) as isolated_client:
+        res = isolated_client.get("/login")
+
+    assert res.status_code == 200
+    assert_current_frontend_csp_allowances(res.headers["content-security-policy"])
 
 
 def csrf_token_from(html):
