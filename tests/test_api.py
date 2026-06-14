@@ -36,11 +36,8 @@ def parse_csp_directives(csp):
 def assert_current_frontend_csp_allowances(csp):
     directives = parse_csp_directives(csp)
     assert directives["default-src"] == ["'self'"]
-    assert directives["script-src"] == [
-        "'self'",
-        "https://cdn.tailwindcss.com",
-    ]
-    assert directives["style-src"] == ["'self'", "'unsafe-inline'"]
+    assert directives["script-src"] == ["'self'"]
+    assert directives["style-src"] == ["'self'"]
     assert directives["img-src"] == ["'self'", "data:"]
     assert directives["font-src"] == ["'self'", "data:"]
     assert directives["connect-src"] == ["'self'"]
@@ -50,7 +47,9 @@ def assert_current_frontend_csp_allowances(csp):
     assert directives["form-action"] == ["'self'"]
     assert "https:" not in directives["script-src"]
     assert "*" not in directives["script-src"]
+    assert "https://cdn.tailwindcss.com" not in directives["script-src"]
     assert "https://cdnjs.cloudflare.com" not in directives["script-src"]
+    assert "'unsafe-inline'" not in directives["style-src"]
 
 
 FRONTEND_XSS_PATTERNS = {
@@ -157,7 +156,7 @@ def test_csp_allows_current_frontend_dependencies_and_blocks_dangerous_capabilit
     assert_current_frontend_csp_allowances(res.headers["content-security-policy"])
 
 
-def test_authenticated_home_csp_keeps_tailwind_and_rejects_cdnjs():
+def test_authenticated_home_csp_allows_same_origin_assets_only():
     with TestClient(app, follow_redirects=False) as isolated_client:
         login_client(isolated_client)
         res = isolated_client.get("/")
@@ -166,16 +165,64 @@ def test_authenticated_home_csp_keeps_tailwind_and_rejects_cdnjs():
     assert_current_frontend_csp_allowances(res.headers["content-security-policy"])
 
 
-def test_frontend_no_longer_references_cdnjs_gsap():
-    template = (PROJECT_ROOT / "app" / "templates" / "index.html").read_text(encoding="utf-8")
+def test_frontend_assets_use_local_css_without_external_cdn_dependencies():
+    login_template = (PROJECT_ROOT / "app" / "templates" / "login.html").read_text(encoding="utf-8")
+    index_template = (PROJECT_ROOT / "app" / "templates" / "index.html").read_text(encoding="utf-8")
     app_js = (STATIC_JS_ROOT / "app.js").read_text(encoding="utf-8")
+    frontend_sources = "\n".join([login_template, index_template, app_js])
 
-    assert "https://cdn.tailwindcss.com" in template
-    assert "/static/js/app.js" in template
-    assert "cdnjs.cloudflare.com" not in template
-    assert "gsap.min.js" not in template
+    assert "/static/css/styles.css" in login_template
+    assert "/static/css/styles.css" in index_template
+    assert "/static/js/app.js" in index_template
+    assert "https://cdn.tailwindcss.com" not in frontend_sources
+    assert "cdnjs.cloudflare.com" not in frontend_sources
+    assert "gsap.min.js" not in frontend_sources
     assert "window.gsap" not in app_js
     assert "gsap." not in strip_js_comments(app_js)
+
+
+def test_frontend_javascript_uses_semantic_css_classes_for_dynamic_ui():
+    app_js = (STATIC_JS_ROOT / "app.js").read_text(encoding="utf-8")
+    js_without_comments = strip_js_comments(app_js)
+    forbidden_tailwind_utilities = [
+        "px-5",
+        "py-4",
+        "hover:bg-",
+        "rounded-full",
+        "bg-slate-",
+        "text-xs",
+        "font-mono",
+        "text-slate-",
+        "text-sky-",
+        "font-semibold",
+        "font-medium",
+        "mt-2",
+        "mt-3",
+        "text-amber-",
+    ]
+
+    assert 'className = "table-cell"' in js_without_comments
+    assert 'className = "table-row"' in js_without_comments
+    assert 'className = "badge"' in js_without_comments
+    assert 'paragraph("answer-line answer-line--lead"' in js_without_comments
+    assert '"answer-warning"' in js_without_comments
+    assert not [utility for utility in forbidden_tailwind_utilities if utility in js_without_comments]
+
+
+def test_readme_documents_local_css_hardening_and_manual_visual_checks():
+    readme = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "Tailwind CDN has been removed" in readme
+    assert "app-owned static CSS" in readme
+    assert "`/static/css/styles.css`" in readme
+    assert "Manual visual smoke checks" in readme
+    assert "`/login`" in readme
+    assert "authenticated `/`" in readme
+    assert "search refresh" in readme
+    assert "Ask HYDRO answer and missing-information states" in readme
+    assert "Tailwind CSS via CDN" not in readme
+    assert "https://cdn.tailwindcss.com" not in readme
+    assert "style-src 'unsafe-inline'" not in readme
 
 
 def csrf_token_from(html):

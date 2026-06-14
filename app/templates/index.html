@@ -4,82 +4,81 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>HYDRO</title>
-  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/static/css/styles.css">
 </head>
-<body class="bg-slate-50 text-slate-900">
-  <div class="min-h-screen flex">
-    <aside class="w-72 bg-white border-r border-slate-200 p-6 hidden lg:block">
-      <div class="flex items-center gap-3 mb-10">
-        <div class="h-11 w-11 rounded-2xl bg-sky-100 flex items-center justify-center text-sky-700 font-bold">H</div>
+<body class="page-app">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand-row">
+        <div class="brand-mark">H</div>
         <div>
-          <h1 class="text-2xl font-bold tracking-tight">HYDRO</h1>
-          <p class="text-xs text-sky-700 font-semibold">Water Regulatory Intelligence</p>
+          <h1>HYDRO</h1>
+          <p>Water Regulatory Intelligence</p>
         </div>
       </div>
-      <nav class="space-y-2 text-sm">
-        <a class="block rounded-xl bg-sky-50 text-sky-700 px-4 py-3 font-medium">Regulations</a>
-        <a class="block rounded-xl hover:bg-slate-50 px-4 py-3">Frequency Engine</a>
-        <a class="block rounded-xl hover:bg-slate-50 px-4 py-3">Categories</a>
-        <a class="block rounded-xl hover:bg-slate-50 px-4 py-3">Sources</a>
+      <nav class="nav-list">
+        <a class="nav-link nav-link--active">Regulations</a>
+        <a class="nav-link">Frequency Engine</a>
+        <a class="nav-link">Categories</a>
+        <a class="nav-link">Sources</a>
       </nav>
-      <div class="mt-12 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-600">
+      <div class="sidebar-note">
         All regulatory answers must be cited. HYDRO never guesses.
       </div>
     </aside>
 
-    <main class="flex-1 p-6 lg:p-10">
-      <header class="mb-8">
-        <div class="flex items-start justify-between gap-4">
+    <main class="main-content">
+      <header class="page-header">
+        <div class="header-row">
           <div>
-            <p class="text-sm text-sky-700 font-semibold">Consult the engineer. Verify the source.</p>
-            <h2 class="text-4xl font-bold tracking-tight">Regulations</h2>
-            <p class="text-slate-500 mt-2">Search, analyze, and compare water regulatory requirements.</p>
+            <p class="eyebrow">Consult the engineer. Verify the source.</p>
+            <h2>Regulations</h2>
+            <p class="muted-text">Search, analyze, and compare water regulatory requirements.</p>
           </div>
           <form method="post" action="/logout">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <button class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Sign out</button>
+            <button class="secondary-button">Sign out</button>
           </form>
         </div>
       </header>
 
-      <section class="grid xl:grid-cols-[1fr_380px] gap-6">
-        <div class="space-y-5">
-          <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-            <div class="grid md:grid-cols-[1fr_auto] gap-3">
-              <input id="searchInput" class="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-sky-100" placeholder="Search regulations, topics, parameters...">
-              <button id="searchBtn" class="rounded-xl bg-slate-900 text-white px-5 py-3 font-medium">Search</button>
+      <section class="dashboard-grid">
+        <div class="content-stack">
+          <div class="content-card search-panel">
+            <div class="search-row">
+              <input id="searchInput" class="input" placeholder="Search regulations, topics, parameters...">
+              <button id="searchBtn" class="primary-button">Search</button>
             </div>
           </div>
 
-          <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-            <div class="p-5 border-b border-slate-200 flex items-center justify-between">
-              <h3 class="font-semibold"><span id="resultCount">{{ regulations|length }}</span> results</h3>
-              <span class="text-xs text-slate-500">40 CFR Part 141 • FAC 62-550</span>
+          <div class="content-card content-card--flush">
+            <div class="card-header">
+              <h3><span id="resultCount">{{ regulations|length }}</span> results</h3>
+              <span>40 CFR Part 141 • FAC 62-550</span>
             </div>
-            <div class="overflow-x-auto">
-              <table class="min-w-full text-sm">
-                <thead class="bg-slate-50 text-slate-500 text-left">
+            <div class="table-wrap">
+              <table class="reg-table">
+                <thead>
                   <tr>
-                    <th class="px-5 py-3">Category</th>
-                    <th class="px-5 py-3">Topic</th>
-                    <th class="px-5 py-3">Regulation</th>
-                    <th class="px-5 py-3">Section</th>
-                    <th class="px-5 py-3">Description</th>
-                    <th class="px-5 py-3">Frequency</th>
-                    <th class="px-5 py-3">Jurisdiction</th>
+                    <th>Category</th>
+                    <th>Topic</th>
+                    <th>Regulation</th>
+                    <th>Section</th>
+                    <th>Description</th>
+                    <th>Frequency</th>
+                    <th>Jurisdiction</th>
                   </tr>
                 </thead>
-                <tbody id="regTable" class="divide-y divide-slate-100">
+                <tbody id="regTable">
                   {% for r in regulations %}
-                  <tr class="hover:bg-slate-50">
-                    <td class="px-5 py-4 font-medium">{{ r.category }}</td>
-                    <td class="px-5 py-4">{{ r.topic }}</td>
-                    <td class="px-5 py-4">{{ r.regulation }}</td>
-                    <td class="px-5 py-4 font-mono text-xs">{{ r.section }}</td>
-                    <td class="px-5 py-4 text-slate-600">{{ r.description }}</td>
-                    <td class="px-5 py-4 text-sky-700 font-medium">{{ r.frequency_summary }}</td>
-                    <td class="px-5 py-4"><span class="rounded-full bg-slate-100 px-3 py-1 text-xs">{{ r.jurisdiction }}</span></td>
+                  <tr class="table-row">
+                    <td class="table-cell table-cell--strong">{{ r.category }}</td>
+                    <td class="table-cell">{{ r.topic }}</td>
+                    <td class="table-cell">{{ r.regulation }}</td>
+                    <td class="table-cell table-cell--mono">{{ r.section }}</td>
+                    <td class="table-cell table-cell--muted">{{ r.description }}</td>
+                    <td class="table-cell table-cell--accent">{{ r.frequency_summary }}</td>
+                    <td class="table-cell"><span class="badge">{{ r.jurisdiction }}</span></td>
                   </tr>
                   {% endfor %}
                 </tbody>
@@ -88,23 +87,23 @@
           </div>
         </div>
 
-        <aside class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm h-fit">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="h-12 w-12 rounded-full bg-sky-100 flex items-center justify-center font-bold text-sky-700">H</div>
+        <aside class="consult-panel">
+          <div class="consult-header">
+            <div class="brand-mark brand-mark--round">H</div>
             <div>
-              <h3 class="font-bold">Consult HYDRO</h3>
-              <p class="text-xs text-slate-500">Water regulatory engineer</p>
+              <h3>Consult HYDRO</h3>
+              <p>Water regulatory engineer</p>
             </div>
           </div>
-          <div class="space-y-3">
+          <div class="form-stack form-stack--compact">
             <input id="parameter" class="input" placeholder="Parameter, e.g. nitrate">
             <input id="systemType" class="input" placeholder="System type, e.g. CWS">
             <input id="sourceType" class="input" placeholder="Source type, e.g. groundwater">
             <input id="population" class="input" type="number" placeholder="Population served">
             <input id="result" class="input" placeholder="Result, e.g. positive / routine">
-            <button id="askBtn" class="w-full rounded-xl bg-sky-600 text-white px-4 py-3 font-semibold">Ask HYDRO</button>
+            <button id="askBtn" class="primary-button primary-button--accent primary-button--full">Ask HYDRO</button>
           </div>
-          <div id="answerBox" class="mt-5 rounded-2xl bg-slate-50 border border-slate-200 p-4 text-sm text-slate-700">
+          <div id="answerBox" class="answer-box">
             Provide a case to determine frequency with citation.
           </div>
         </aside>

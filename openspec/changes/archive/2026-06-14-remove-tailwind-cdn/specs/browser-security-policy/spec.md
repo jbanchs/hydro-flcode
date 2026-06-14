@@ -1,28 +1,6 @@
-# Browser Security Policy Specification
+# Delta for Browser Security Policy
 
-## Purpose
-
-Define browser-enforced response security protections for HYDRO rendered pages while preserving current authentication, API, and same-origin static asset behavior.
-
-## Requirements
-
-### Requirement: Security Headers on Rendered Pages
-
-Rendered application pages MUST include a Content-Security-Policy or explicitly configured Content-Security-Policy-Report-Only header, X-Content-Type-Options, Referrer-Policy, and Permissions-Policy.
-
-#### Scenario: Public login response includes headers
-
-- GIVEN an unauthenticated client
-- WHEN the client requests `/login`
-- THEN the response MUST include the configured browser security headers
-- AND the response MUST remain renderable as the login page
-
-#### Scenario: Authenticated home response includes headers
-
-- GIVEN an authenticated client
-- WHEN the client requests `/`
-- THEN the response MUST include the configured browser security headers
-- AND the response MUST remain renderable as the authenticated app page
+## MODIFIED Requirements
 
 ### Requirement: CSP Allows Current Asset Sources Only
 
@@ -55,23 +33,6 @@ The CSP MUST allow HYDRO's same-origin templates and `/static` assets only for f
 - WHEN the CSP header is generated
 - THEN `style-src` MUST be restricted to same-origin styles
 - AND `style-src 'unsafe-inline'` MUST NOT be present
-
-### Requirement: Auth and API Behavior Is Preserved
-
-Security headers MUST NOT change authentication redirects, session cookies, CSRF behavior, or API response semantics.
-
-#### Scenario: Unauthenticated access still redirects
-
-- GIVEN an unauthenticated client
-- WHEN the client requests an authenticated page
-- THEN the existing authentication redirect behavior MUST be preserved
-- AND security headers MAY be present on the response
-
-#### Scenario: Existing API tests remain valid
-
-- GIVEN the existing API and XSS guard test suite
-- WHEN `py -m pytest` runs locally, or CI runs `python -m pytest`
-- THEN existing auth, CSRF, and XSS expectations MUST continue to pass
 
 ### Requirement: Security Header Tests
 
@@ -109,6 +70,8 @@ Documentation MUST state that Tailwind CDN has been removed, frontend styling is
 - WHEN they review frontend security notes
 - THEN they MUST see Tailwind CDN described as removed
 - AND they MUST see local static CSS and manual readability checks documented
+
+## ADDED Requirements
 
 ### Requirement: Local CSS Preserves Usable UI
 

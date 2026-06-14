@@ -10,7 +10,7 @@ It uses structured regulation tables plus a citation-first agent that answers on
 - Jinja2
 - SQLite
 - HTML / CSS / JavaScript
-- Tailwind CSS via CDN for fast prototyping
+- App-owned static CSS served from `/static/css/styles.css`
 - Pytest for TDD
 
 ## Core Concept
@@ -67,7 +67,9 @@ HYDRO sets browser security headers on rendered pages and API responses through 
 - `Referrer-Policy: strict-origin-when-cross-origin`
 - `Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()`
 
-The current CSP allows same-origin templates and static assets plus Tailwind from `https://cdn.tailwindcss.com`. Tailwind CDN is the remaining interim prototyping tradeoff; CDNJS/GSAP has been removed from the app and from `script-src`. Production hardening should replace Tailwind CDN with a local build so third-party script sources and `style-src 'unsafe-inline'` can be removed.
+The current CSP allows only same-origin templates and static frontend assets for scripts and styles. Tailwind CDN has been removed; HYDRO now uses app-owned static CSS from `/static/css/styles.css` for the login page, authenticated app shell, regulation table, and Ask HYDRO dynamic states. CDNJS/GSAP is not required by the frontend or allowed by `script-src`.
+
+Manual visual smoke checks are required after CSS changes because this project has no browser E2E tooling. Validate that `/login` remains readable and operable, authenticated `/` remains readable, search refresh preserves distinguishable regulation rows and badges, and Ask HYDRO answer and missing-information states are legible without external CDN assets.
 
 Rollback is limited to reverting the frontend asset removal and `app/core/security_headers.py`; this restores the previous response header and cosmetic animation behavior without changing auth, CSRF, API, database, or frequency logic.
 

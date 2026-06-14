@@ -1,4 +1,4 @@
-function cell(text, className = "px-5 py-4") {
+function cell(text, className = "table-cell") {
   const td = document.createElement("td");
   td.className = className;
   td.textContent = text ?? "";
@@ -25,22 +25,22 @@ async function searchRegs() {
   document.getElementById("resultCount").textContent = data.items.length;
   const rows = data.items.map(r => {
     const tr = document.createElement("tr");
-    tr.className = "hover:bg-slate-50";
+    tr.className = "table-row";
 
     const jurisdiction = document.createElement("span");
-    jurisdiction.className = "rounded-full bg-slate-100 px-3 py-1 text-xs";
+    jurisdiction.className = "badge";
     jurisdiction.textContent = r.jurisdiction ?? "";
 
     const jurisdictionCell = cell("");
     jurisdictionCell.append(jurisdiction);
 
     tr.append(
-      cell(r.category, "px-5 py-4 font-medium"),
+      cell(r.category, "table-cell table-cell--strong"),
       cell(r.topic),
       cell(r.regulation),
-      cell(r.section, "px-5 py-4 font-mono text-xs"),
-      cell(r.description, "px-5 py-4 text-slate-600"),
-      cell(r.frequency_summary, "px-5 py-4 text-sky-700 font-medium"),
+      cell(r.section, "table-cell table-cell--mono"),
+      cell(r.description, "table-cell table-cell--muted"),
+      cell(r.frequency_summary, "table-cell table-cell--accent"),
       jurisdictionCell
     );
 
@@ -68,17 +68,17 @@ async function askHydro() {
   const data = await res.json();
   const answerBox = document.getElementById("answerBox");
   const content = [
-    paragraph("font-semibold text-slate-900", data.answer ?? ""),
-    paragraph("mt-3", ...labeledText("Frequency", data.required_frequency || "Not confirmed")),
-    paragraph("", ...labeledText("Action", data.action || "Not confirmed")),
-    paragraph("", ...labeledText("Citation", data.citation || "No citation found")),
-    paragraph("", ...labeledText("Confidence", data.confidence ?? "")),
-    paragraph("mt-3 text-slate-500", data.interpretation ?? "")
+    paragraph("answer-line answer-line--lead", data.answer ?? ""),
+    paragraph("answer-line", ...labeledText("Frequency", data.required_frequency || "Not confirmed")),
+    paragraph("answer-line", ...labeledText("Action", data.action || "Not confirmed")),
+    paragraph("answer-line", ...labeledText("Citation", data.citation || "No citation found")),
+    paragraph("answer-line", ...labeledText("Confidence", data.confidence ?? "")),
+    paragraph("answer-line answer-line--muted", data.interpretation ?? "")
   ];
 
   if (data.missing_information?.length) {
     content.push(paragraph(
-      "mt-2 text-amber-700",
+      "answer-warning",
       ...labeledText("Missing", data.missing_information.join(", "))
     ));
   }
