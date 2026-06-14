@@ -39,7 +39,6 @@ def assert_current_frontend_csp_allowances(csp):
     assert directives["script-src"] == [
         "'self'",
         "https://cdn.tailwindcss.com",
-        "https://cdnjs.cloudflare.com",
     ]
     assert directives["style-src"] == ["'self'", "'unsafe-inline'"]
     assert directives["img-src"] == ["'self'", "data:"]
@@ -51,6 +50,7 @@ def assert_current_frontend_csp_allowances(csp):
     assert directives["form-action"] == ["'self'"]
     assert "https:" not in directives["script-src"]
     assert "*" not in directives["script-src"]
+    assert "https://cdnjs.cloudflare.com" not in directives["script-src"]
 
 
 FRONTEND_XSS_PATTERNS = {
@@ -155,6 +155,27 @@ def test_csp_allows_current_frontend_dependencies_and_blocks_dangerous_capabilit
 
     assert res.status_code == 200
     assert_current_frontend_csp_allowances(res.headers["content-security-policy"])
+
+
+def test_authenticated_home_csp_keeps_tailwind_and_rejects_cdnjs():
+    with TestClient(app, follow_redirects=False) as isolated_client:
+        login_client(isolated_client)
+        res = isolated_client.get("/")
+
+    assert res.status_code == 200
+    assert_current_frontend_csp_allowances(res.headers["content-security-policy"])
+
+
+def test_frontend_no_longer_references_cdnjs_gsap():
+    template = (PROJECT_ROOT / "app" / "templates" / "index.html").read_text(encoding="utf-8")
+    app_js = (STATIC_JS_ROOT / "app.js").read_text(encoding="utf-8")
+
+    assert "https://cdn.tailwindcss.com" in template
+    assert "/static/js/app.js" in template
+    assert "cdnjs.cloudflare.com" not in template
+    assert "gsap.min.js" not in template
+    assert "window.gsap" not in app_js
+    assert "gsap." not in strip_js_comments(app_js)
 
 
 def csrf_token_from(html):

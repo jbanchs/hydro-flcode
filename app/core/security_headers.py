@@ -3,7 +3,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 CONTENT_SECURITY_POLICY = (
     "default-src 'self'; "
-    "script-src 'self' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com; "
+    "script-src 'self' https://cdn.tailwindcss.com; "
     "style-src 'self' 'unsafe-inline'; "
     "img-src 'self' data:; "
     "font-src 'self' data:; "

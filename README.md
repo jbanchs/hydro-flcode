@@ -11,7 +11,6 @@ It uses structured regulation tables plus a citation-first agent that answers on
 - SQLite
 - HTML / CSS / JavaScript
 - Tailwind CSS via CDN for fast prototyping
-- GSAP for subtle UI animation
 - Pytest for TDD
 
 ## Core Concept
@@ -68,9 +67,9 @@ HYDRO sets browser security headers on rendered pages and API responses through 
 - `Referrer-Policy: strict-origin-when-cross-origin`
 - `Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()`
 
-The current CSP allows same-origin templates and static assets, Tailwind from `https://cdn.tailwindcss.com`, and GSAP from `https://cdnjs.cloudflare.com`. These CDN allowances are an interim prototyping tradeoff. Production hardening should replace Tailwind CDN with a local build and vendor or self-host GSAP so third-party script sources and `style-src 'unsafe-inline'` can be removed.
+The current CSP allows same-origin templates and static assets plus Tailwind from `https://cdn.tailwindcss.com`. Tailwind CDN is the remaining interim prototyping tradeoff; CDNJS/GSAP has been removed from the app and from `script-src`. Production hardening should replace Tailwind CDN with a local build so third-party script sources and `style-src 'unsafe-inline'` can be removed.
 
-Rollback is limited to reverting the security headers middleware registration and `app/core/security_headers.py`; this restores the previous response header behavior without changing auth, CSRF, API, database, or frequency logic.
+Rollback is limited to reverting the frontend asset removal and `app/core/security_headers.py`; this restores the previous response header and cosmetic animation behavior without changing auth, CSRF, API, database, or frequency logic.
 
 ## Project Structure
 

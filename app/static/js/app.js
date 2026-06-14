@@ -1,5 +1,3 @@
-gsap.from("header, aside, table", { opacity: 0, y: 12, duration: 0.45, stagger: 0.08 });
-
 function cell(text, className = "px-5 py-4") {
   const td = document.createElement("td");
   td.className = className;

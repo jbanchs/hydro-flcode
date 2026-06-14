@@ -1,32 +1,11 @@
-# Browser Security Policy Specification
+# Delta for Browser Security Policy
 
-## Purpose
-
-Define browser-enforced response security protections for HYDRO rendered pages while preserving current authentication, API, approved CDN, and static asset behavior.
-
-## Requirements
-
-### Requirement: Security Headers on Rendered Pages
-
-Rendered application pages MUST include a Content-Security-Policy or explicitly configured Content-Security-Policy-Report-Only header, X-Content-Type-Options, Referrer-Policy, and Permissions-Policy.
-
-#### Scenario: Public login response includes headers
-
-- GIVEN an unauthenticated client
-- WHEN the client requests `/login`
-- THEN the response MUST include the configured browser security headers
-- AND the response MUST remain renderable as the login page
-
-#### Scenario: Authenticated home response includes headers
-
-- GIVEN an authenticated client
-- WHEN the client requests `/`
-- THEN the response MUST include the configured browser security headers
-- AND the response MUST remain renderable as the authenticated app page
+## MODIFIED Requirements
 
 ### Requirement: CSP Allows Current Asset Sources Only
 
 The CSP MUST allow HYDRO's current same-origin templates, `/static` assets, and Tailwind CDN usage, MUST NOT allow CDNJS or GSAP script loading, and MUST avoid broader source allowances unless required by the current UI.
+(Previously: CSP allowed Tailwind CDN and CDNJS GSAP as current frontend dependencies.)
 
 #### Scenario: Current frontend dependencies remain allowed without CDNJS
 
@@ -49,26 +28,10 @@ The CSP MUST allow HYDRO's current same-origin templates, `/static` assets, and 
 - THEN the CDNJS GSAP script MUST be blocked by policy
 - AND Tailwind CDN MUST remain explicitly allowed as interim debt
 
-### Requirement: Auth and API Behavior Is Preserved
-
-Security headers MUST NOT change authentication redirects, session cookies, CSRF behavior, or API response semantics.
-
-#### Scenario: Unauthenticated access still redirects
-
-- GIVEN an unauthenticated client
-- WHEN the client requests an authenticated page
-- THEN the existing authentication redirect behavior MUST be preserved
-- AND security headers MAY be present on the response
-
-#### Scenario: Existing API tests remain valid
-
-- GIVEN the existing API and XSS guard test suite
-- WHEN `py -m pytest` runs locally, or CI runs `python -m pytest`
-- THEN existing auth, CSRF, and XSS expectations MUST continue to pass
-
 ### Requirement: Security Header Tests
 
 Automated tests MUST verify the configured headers on `/login` and authenticated `/`, and SHOULD assert enough CSP directives to catch accidental policy weakening, including reintroducing CDNJS in `script-src`.
+(Previously: Tests confirmed self/static access and current CDN allowances, including CDNJS.)
 
 #### Scenario: Header regression is detected
 
@@ -93,6 +56,7 @@ Automated tests MUST verify the configured headers on `/login` and authenticated
 ### Requirement: Interim CDN Tradeoff Is Documented
 
 Documentation MUST state that Tailwind CDN is an interim allowance, CDNJS/GSAP has been removed, and production hardening SHOULD self-host or build remaining frontend assets in a follow-up change.
+(Previously: Documentation stated both Tailwind CDN and CDNJS allowances were interim.)
 
 #### Scenario: Reader sees follow-up hardening guidance
 
