@@ -1,6 +1,8 @@
 # HYDRO — Water Regulatory Intelligence Platform
 
-HYDRO is a minimal white-first regulatory webapp for water compliance. It uses structured regulation tables plus a citation-first agent that answers only from verified regulatory sources.
+HYDRO is a minimal white-first regulatory webapp for water compliance. It transforms drinking water regulations into searchable, structured, and citation-driven compliance knowledge powered by 40 CFR Part 141, FAC 62-550, and jurisdiction-specific requirements.
+
+It uses structured regulation tables plus a citation-first agent that answers only from verified regulatory sources.
 
 ## Stack
 
