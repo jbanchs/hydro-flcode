@@ -32,6 +32,9 @@ node_modules/
 *.sqlite3
 ._Archive/
 
+# Deployment secrets and machine-specific access notes
+specs/DEPLOY_INFO.md
+
 # OS/editor noise
 .DS_Store
 Thumbs.db
