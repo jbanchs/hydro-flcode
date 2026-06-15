@@ -58,6 +58,28 @@ http://127.0.0.1:8000
 py -m pytest
 ```
 
+## Local OpenSpec validation
+
+For active SDD/OpenSpec changes, use the strict OpenSpec CLI only when a verified OpenSpec CLI is already installed locally:
+
+```bash
+openspec validate local-openspec-validation --strict
+```
+
+If that CLI is not available, use HYDRO's native SDD status command as a local status/archive-readiness signal:
+
+```bash
+gentle-ai sdd-status local-openspec-validation
+```
+
+`gentle-ai sdd-status` is not strict OpenSpec CLI schema validation. It is a fallback status/readiness check, not a replacement for `openspec validate <change> --strict`.
+
+Keep local verification on Windows aligned with the repo test runner:
+
+```bash
+py -m pytest
+```
+
 ## Local browser smoke checklist
 
 Use this checklist for local confidence while GitHub Actions is blocked by billing. It is not deploy automation, not a CI fix, and does not require Playwright, Selenium, Cypress, screenshots, remote services, or real secrets.

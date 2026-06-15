@@ -56,6 +56,12 @@ testing:
       HYDRO_SESSION_SECRET: test-session-secret-with-enough-entropy
       HYDRO_BOOTSTRAP_ADMIN_PASSWORD: test-admin-password
       HYDRO_SESSION_COOKIE_SECURE: "0"
+  local_validation:
+    strict_command: openspec validate local-openspec-validation --strict
+    strict_command_condition: Use only when a verified OpenSpec CLI is already installed locally.
+    fallback_command: gentle-ai sdd-status local-openspec-validation
+    fallback_boundary: Native status/archive-readiness signal; not strict OpenSpec CLI schema validation.
+    dependency_boundary: Do not install, pin, or require an unverified OpenSpec CLI package.
 
 rules:
   proposal:

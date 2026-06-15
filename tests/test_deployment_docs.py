@@ -10,6 +10,18 @@ DEPLOYMENT_DOC = PROJECT_ROOT / "docs" / "deployment.md"
 DEPLOY_DIR = PROJECT_ROOT / "deploy"
 README = PROJECT_ROOT / "README.md"
 ARCHIVED_OPENSPEC_MARKDOWN = PROJECT_ROOT / "openspec" / "changes" / "archive"
+OPENSPEC_CONFIG = PROJECT_ROOT / "openspec" / "config.yaml"
+DEPLOYMENT_READINESS_SPEC = PROJECT_ROOT / "openspec" / "specs" / "deployment-readiness" / "spec.md"
+ARCHIVED_LOCAL_OPENSPEC_CHANGE_SPEC = (
+    PROJECT_ROOT
+    / "openspec"
+    / "changes"
+    / "archive"
+    / "2026-06-15-local-openspec-validation"
+    / "specs"
+    / "deployment-readiness"
+    / "spec.md"
+)
 
 REQUIRED_ENV_KEYS = {
     "HYDRO_SESSION_SECRET",
@@ -44,6 +56,12 @@ REQUIRED_RUNTIME_ARTIFACTS = {
 }
 FORBIDDEN_HEALTHZ_READINESS_PATTERN = re.compile(
     r"/healthz[^\n]*(?:is|as|for)\s+(?:a\s+)?(?:readiness|database|dependency|SQLite|authenticated workflow validation)",
+    re.IGNORECASE,
+)
+STRICT_VALIDATION_COMMAND = "openspec validate local-openspec-validation --strict"
+NATIVE_STATUS_COMMAND = "gentle-ai sdd-status local-openspec-validation"
+FORBIDDEN_NATIVE_STATUS_STRICT_EQUIVALENCE_PATTERN = re.compile(
+    r"gentle-ai\s+sdd-status[^\n.]{0,120}(?:performs|equals|is\s+strict|as\s+strict|replaces)[^\n.]{0,80}(?:OpenSpec|schema|validation)",
     re.IGNORECASE,
 )
 
@@ -204,3 +222,41 @@ def test_archived_openspec_markdown_allows_generic_local_secret_note_language():
     }
 
     assert expected_existing_references.issubset(set(generic_references))
+
+
+def test_readme_documents_local_openspec_validation_ladder_and_pytest_command():
+    readme = read(README)
+
+    assert STRICT_VALIDATION_COMMAND in readme
+    assert "verified OpenSpec CLI" in readme
+    assert NATIVE_STATUS_COMMAND in readme
+    assert "local status/archive-readiness signal" in readme
+    assert "not strict OpenSpec CLI schema validation" in readme
+    assert "py -m pytest" in readme
+
+
+def test_local_status_fallback_is_not_described_as_strict_validation():
+    tracked_guidance = "\n".join(
+        [
+            read(README),
+            read(OPENSPEC_CONFIG),
+            read(DEPLOYMENT_READINESS_SPEC),
+            read(ARCHIVED_LOCAL_OPENSPEC_CHANGE_SPEC),
+        ]
+    )
+    tracked_guidance = tracked_guidance.replace(
+        "GIVEN tracked documentation claims `gentle-ai sdd-status` performs strict OpenSpec CLI validation",
+        "",
+    )
+
+    assert FORBIDDEN_NATIVE_STATUS_STRICT_EQUIVALENCE_PATTERN.search(tracked_guidance) is None
+
+
+def test_openspec_config_records_local_validation_expectations_without_cli_dependency():
+    config = read(OPENSPEC_CONFIG)
+
+    assert "local_validation" in config
+    assert STRICT_VALIDATION_COMMAND in config
+    assert NATIVE_STATUS_COMMAND in config
+    assert "not strict OpenSpec CLI schema validation" in config
+    assert "Do not install, pin, or require an unverified OpenSpec CLI package" in config
