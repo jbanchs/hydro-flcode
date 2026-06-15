@@ -68,6 +68,24 @@ Playwright, Selenium, Cypress, screenshots, and CI browser jobs remain deferred 
 - Define rollback expectations before live changes: stop the service, restore the selected SQLite backup, verify ownership, restart the service, and run a smoke check.
 - To rollback only the production-mode signal, unset or change `HYDRO_ENV` away from `production` after confirming the operator accepts restoring development/test startup behavior.
 
+### Manual SQLite backup/restore rehearsal checklist
+
+This manual SQLite backup/restore rehearsal checklist is a placeholder-only readiness review. It is a non-destructive rehearsal that the operator adapts outside Git before a live deployment.
+
+- [ ] Record the pre-deploy backup location as `<backup-path>` before any release or destructive operation.
+- [ ] Record the isolated restore rehearsal target as `<restore-test-db>`; it must not be the live database.
+- [ ] Rehearse the restore decision manually with placeholder commands and paths only.
+- [ ] Confirm the rollback boundary: reverting this repository change only removes docs, tests, and OpenSpec artifacts; live data rollback remains an operator-run restore from `<backup-path>` into an isolated target such as `<restore-test-db>`.
+- [ ] Confirm restoration expectations, ownership checks, service restart order, and liveness smoke checks before live changes.
+
+Safety boundaries:
+
+- Do not read, copy, open, or restore a live hydro.db during rehearsal.
+- Do not read real environment files, secrets, ignored sensitive notes, or production data.
+- Do not contact servers or run remote access commands.
+- Do not add backup scripts, restore scripts, app backup logic, or destructive restore automation.
+- Keep any real backup path, database path, host, credential, or private operator note outside Git.
+
 ## Destructive Initialization Warning
 
 `scripts/init_db.py is destructive`. Do not run it against live production data unless an explicit backup/restore decision is accepted before execution.

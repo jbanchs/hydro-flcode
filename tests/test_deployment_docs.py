@@ -10,6 +10,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 ENV_EXAMPLE = PROJECT_ROOT / ".env.example"
 DEPLOY_ENV_EXAMPLE = PROJECT_ROOT / "deploy" / "env" / "hydro.env.example"
 DEPLOYMENT_DOC = PROJECT_ROOT / "docs" / "deployment.md"
+DEPLOY_README = PROJECT_ROOT / "deploy" / "README.md"
 DEPLOY_DIR = PROJECT_ROOT / "deploy"
 README = PROJECT_ROOT / "README.md"
 ARCHIVED_OPENSPEC_MARKDOWN = PROJECT_ROOT / "openspec" / "changes" / "archive"
@@ -68,6 +69,24 @@ FORBIDDEN_NATIVE_STATUS_STRICT_EQUIVALENCE_PATTERN = re.compile(
     r"gentle-ai\s+sdd-status[^\n.]{0,120}(?:performs|equals|is\s+strict|as\s+strict|replaces)[^\n.]{0,80}(?:OpenSpec|schema|validation)",
     re.IGNORECASE,
 )
+BACKUP_RESTORE_PLACEHOLDERS = {"<backup-path>", "<restore-test-db>"}
+FORBIDDEN_BACKUP_RESTORE_AUTOMATION_PATTERN = re.compile(
+    r"(backup\.sh|restore\.sh|sqlite3\s+.*hydro\.db|rsync\s+|scp\s+|ssh\s+|--replace\b|live restore)",
+    re.IGNORECASE,
+)
+REQUIRED_BACKUP_RESTORE_CONCEPTS = [
+    "manual SQLite backup/restore rehearsal checklist",
+    "pre-deploy backup",
+    "restore rehearsal",
+    "rollback boundary",
+    "non-destructive rehearsal",
+]
+REQUIRED_BACKUP_RESTORE_BOUNDARIES = [
+    "Do not read, copy, open, or restore a live hydro.db during rehearsal.",
+    "Do not read real environment files, secrets, ignored sensitive notes, or production data.",
+    "Do not contact servers or run remote access commands.",
+    "Do not add backup scripts, restore scripts, app backup logic, or destructive restore automation.",
+]
 
 
 def read(path: Path) -> str:
@@ -284,6 +303,35 @@ def test_deployment_docs_describe_healthz_as_liveness_only_smoke_check():
     assert "liveness-only smoke check" in combined_docs
     assert "not a readiness, database, dependency, or authenticated workflow validation endpoint" in combined_docs
     assert FORBIDDEN_HEALTHZ_READINESS_PATTERN.search(combined_docs) is None
+
+
+def test_sqlite_backup_restore_guidance_requires_manual_rehearsal_checklist():
+    deployment_doc = read(DEPLOYMENT_DOC)
+    deploy_readme = read(DEPLOY_README)
+
+    for concept in REQUIRED_BACKUP_RESTORE_CONCEPTS:
+        assert concept in deployment_doc
+
+    assert "manual SQLite backup/restore readiness" in deploy_readme
+
+
+def test_sqlite_backup_restore_examples_use_required_placeholders_only():
+    deployment_doc = read(DEPLOYMENT_DOC)
+
+    for placeholder in BACKUP_RESTORE_PLACEHOLDERS:
+        assert placeholder in deployment_doc
+
+    assert "/var/lib/hydro/hydro.db" not in deployment_doc
+    assert "sqlite3 hydro.db" not in deployment_doc
+
+
+def test_sqlite_backup_restore_guidance_rejects_live_access_and_destructive_automation():
+    backup_restore_guidance = read(DEPLOYMENT_DOC) + "\n" + read(DEPLOY_README)
+
+    for boundary in REQUIRED_BACKUP_RESTORE_BOUNDARIES:
+        assert boundary in backup_restore_guidance
+
+    assert FORBIDDEN_BACKUP_RESTORE_AUTOMATION_PATTERN.search(backup_restore_guidance) is None
 
 
 def test_deployment_readiness_rejects_server_access_and_deploy_automation():

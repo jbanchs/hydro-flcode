@@ -26,7 +26,7 @@ This directory contains example-only runtime artifacts for a later HYDRO product
 4. Confirm `HYDRO_ENV=production`, a real session secret, `HYDRO_SESSION_COOKIE_SECURE=1`, no development-secret allowance, and an absolute non-default database path are present in the real runtime environment.
 5. Confirm the service user owns the SQLite database path and parent directory.
 6. Confirm the reverse proxy owns TLS and the firewall exposes only the proxy entrypoint.
-7. Confirm backup, restore, and rollback decisions before any production change.
+7. Confirm manual SQLite backup/restore readiness in `docs/deployment.md`: record the pre-deploy backup, restore rehearsal target, rollback boundary, and safety boundaries with placeholders only.
 8. Use `GET /healthz` as a liveness-only smoke check through the normal reverse proxy path; it is not a readiness, database, dependency, or authenticated workflow validation endpoint.
 9. Run project validation with `py -m pytest` from a workstation or CI context.
 
