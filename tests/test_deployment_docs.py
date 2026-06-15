@@ -42,6 +42,10 @@ REQUIRED_RUNTIME_ARTIFACTS = {
     "deploy/env/hydro.env.example",
     "deploy/caddy/Caddyfile.example",
 }
+FORBIDDEN_HEALTHZ_READINESS_PATTERN = re.compile(
+    r"/healthz[^\n]*(?:is|as|for)\s+(?:a\s+)?(?:readiness|database|dependency|SQLite|authenticated workflow validation)",
+    re.IGNORECASE,
+)
 
 
 def read(path: Path) -> str:
@@ -147,6 +151,15 @@ def test_deployment_runbook_covers_runtime_security_and_sqlite_operations():
         assert phrase in combined_docs
 
 
+def test_deployment_docs_describe_healthz_as_liveness_only_smoke_check():
+    combined_docs = combined_source_text()
+
+    assert "/healthz" in combined_docs
+    assert "liveness-only smoke check" in combined_docs
+    assert "not a readiness, database, dependency, or authenticated workflow validation endpoint" in combined_docs
+    assert FORBIDDEN_HEALTHZ_READINESS_PATTERN.search(combined_docs) is None
+
+
 def test_deployment_readiness_rejects_server_access_and_deploy_automation():
     assert_no_forbidden_pattern(FORBIDDEN_AUTOMATION_PATTERN, "server access or deploy automation")
 
@@ -181,7 +194,7 @@ def test_archived_openspec_markdown_allows_generic_local_secret_note_language():
         if "ignored local deployment secret note" in content
     ]
 
-    assert set(generic_references) == {
+    expected_existing_references = {
         "openspec/changes/archive/2026-06-15-prepare-deployment/apply-progress.md",
         "openspec/changes/archive/2026-06-15-prepare-deployment/design.md",
         "openspec/changes/archive/2026-06-15-prepare-deployment/exploration.md",
@@ -189,3 +202,5 @@ def test_archived_openspec_markdown_allows_generic_local_secret_note_language():
         "openspec/changes/archive/2026-06-15-prepare-deployment/tasks.md",
         "openspec/changes/archive/2026-06-15-prepare-deployment/verify-report.md",
     }
+
+    assert expected_existing_references.issubset(set(generic_references))

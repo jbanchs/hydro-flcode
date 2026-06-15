@@ -24,6 +24,7 @@ This directory contains example-only runtime artifacts for a later HYDRO product
 3. Confirm the service user owns the SQLite database path and parent directory.
 4. Confirm the reverse proxy owns TLS and the firewall exposes only the proxy entrypoint.
 5. Confirm backup, restore, and rollback decisions before any production change.
-6. Run project validation with `py -m pytest` from a workstation or CI context.
+6. Use `GET /healthz` as a liveness-only smoke check through the normal reverse proxy path; it is not a readiness, database, dependency, or authenticated workflow validation endpoint.
+7. Run project validation with `py -m pytest` from a workstation or CI context.
 
 Real deployment values and remote server procedures are intentionally out of scope.

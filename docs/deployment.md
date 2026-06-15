@@ -28,6 +28,10 @@ Start from `.env.example` or `deploy/env/hydro.env.example` and replace placehol
 - Keep the production environment file readable only by the service account and administrators.
 - Inspect runtime logs through journald after service start, restart, and rollback checks.
 
+## Liveness Smoke Check
+
+Use `GET /healthz` as a liveness-only smoke check after service start, restart, reverse-proxy changes, and rollback checks. It returns static non-sensitive JSON and is not a readiness, database, dependency, or authenticated workflow validation endpoint.
+
 ## Reverse Proxy, TLS, and Firewall
 
 - Review `deploy/caddy/Caddyfile.example` as the placeholder reverse proxy template.
@@ -57,6 +61,7 @@ Start from `.env.example` or `deploy/env/hydro.env.example` and replace placehol
 - [ ] SQLite path ownership and permissions are verified.
 - [ ] Backup, restore, and rollback steps are documented before deployment.
 - [ ] `scripts/init_db.py` is not run on live data without accepted destructive-operation intent.
+- [ ] `/healthz` liveness-only smoke check is reachable through the normal reverse proxy path.
 
 ## Runtime Artifact Index
 

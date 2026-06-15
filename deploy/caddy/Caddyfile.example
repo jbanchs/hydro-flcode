@@ -2,5 +2,6 @@
     encode zstd gzip
 
     # Caddy manages public TLS for this site.
+    # GET /healthz proxies like normal app traffic for liveness-only smoke checks.
     reverse_proxy <private-bind-host>:<private-port>
 }
