@@ -5,10 +5,10 @@ initialized: 2026-06-14
 
 context: |
   Product: Water regulatory intelligence platform for citation-driven compliance knowledge.
-  Tech stack: Python 3.13, FastAPI, Jinja2, SQLite, HTML/CSS/JavaScript, Tailwind CDN, GSAP.
+  Tech stack: Python 3.13, FastAPI, Jinja2, SQLite, HTML/CSS/JavaScript, app-owned static CSS/JS.
   Architecture: FastAPI app with routers, services, core config, database module, templates/static assets.
-  Testing: pytest with FastAPI/httpx integration coverage; CI runs python -m pytest.
-  Style: Minimal white-first webapp; retrieval-first regulatory answers from verified citations only.
+  Testing: pytest with FastAPI/httpx integration coverage; local Windows runner is py -m pytest; CI may run python -m pytest when billing is available.
+  Style: Minimal white-first webapp; retrieval-first regulatory answers from verified citations only; no CDN frontend dependency required.
 
 strict_tdd: true
 
@@ -17,7 +17,7 @@ testing:
   detected: 2026-06-14
   runner:
     framework: pytest
-    command: python -m pytest
+    command: py -m pytest
     config: pytest.ini
   layers:
     unit:
@@ -50,6 +50,7 @@ testing:
     available: true
     workflow: .github/workflows/ci.yml
     command: python -m pytest
+    status_note: If GitHub Actions reports billing/account lock, treat it as an external blocker rather than a code failure.
     env:
       HYDRO_DATABASE_PATH: tests/.tmp_hydro_test.db
       HYDRO_SESSION_SECRET: test-session-secret-with-enough-entropy
@@ -73,9 +74,9 @@ rules:
     - Follow existing FastAPI router/service patterns.
     - Keep tests with the code they validate.
     tdd: true
-    test_command: python -m pytest
+    test_command: py -m pytest
   verify:
-    test_command: python -m pytest
+    test_command: py -m pytest
     build_command: null
     coverage_threshold: 0
   archive:
