@@ -1,4 +1,6 @@
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -6,6 +8,7 @@ import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 ENV_EXAMPLE = PROJECT_ROOT / ".env.example"
+DEPLOY_ENV_EXAMPLE = PROJECT_ROOT / "deploy" / "env" / "hydro.env.example"
 DEPLOYMENT_DOC = PROJECT_ROOT / "docs" / "deployment.md"
 DEPLOY_DIR = PROJECT_ROOT / "deploy"
 README = PROJECT_ROOT / "README.md"
@@ -127,6 +130,83 @@ def test_env_example_exists_with_required_placeholder_only_values():
         if key == "HYDRO_SESSION_COOKIE_SECURE":
             continue
         assert PLACEHOLDER_PATTERN.match(value), f"{key} must use an angle-bracket placeholder"
+
+
+def test_runtime_config_validator_accepts_committed_placeholder_templates():
+    from scripts.validate_runtime_config import validate_runtime_templates
+
+    result = validate_runtime_templates(ENV_EXAMPLE, DEPLOY_ENV_EXAMPLE)
+
+    assert result.ok is True
+    assert result.errors == []
+
+
+def test_runtime_config_validator_rejects_key_parity_and_malformed_lines(tmp_path):
+    from scripts.validate_runtime_config import validate_runtime_templates
+
+    app_template = tmp_path / ".env.example"
+    deploy_template = tmp_path / "hydro.env.example"
+    app_template.write_text(read(ENV_EXAMPLE) + "\nEXTRA_KEY=<placeholder>\n", encoding="utf-8")
+    deploy_template.write_text(read(DEPLOY_ENV_EXAMPLE) + "\nMALFORMED_LINE\n", encoding="utf-8")
+
+    result = validate_runtime_templates(app_template, deploy_template)
+
+    assert result.ok is False
+    assert "deploy/env/hydro.env.example: malformed assignment on line 11" in result.errors
+    assert ".env.example: unexpected key(s): EXTRA_KEY" in result.errors
+
+
+def test_runtime_config_validator_rejects_real_looking_runtime_values(tmp_path):
+    from scripts.validate_runtime_config import validate_runtime_templates
+
+    app_template = tmp_path / ".env.example"
+    deploy_template = tmp_path / "hydro.env.example"
+    unsafe = read(ENV_EXAMPLE).replace(
+        "HYDRO_SESSION_SECRET=<required-long-random-secret-from-secret-manager>",
+        "HYDRO_SESSION_SECRET=super-secret-token-value-that-looks-real",
+    ).replace(
+        "HYDRO_DATABASE_PATH=<absolute-production-sqlite-path-owned-by-service-user>",
+        "HYDRO_DATABASE_PATH=/var/lib/hydro/hydro.db",
+    ).replace(
+        "HYDRO_BOOTSTRAP_ADMIN_USERNAME=<optional-initial-admin-username>",
+        "HYDRO_BOOTSTRAP_ADMIN_USERNAME=hydro.example.com",
+    ).replace(
+        "HYDRO_ALLOW_DEV_SECRET=<local-development-only-never-set-in-production>",
+        "HYDRO_ALLOW_DEV_SECRET=1",
+    )
+    app_template.write_text(unsafe, encoding="utf-8")
+    deploy_template.write_text(read(DEPLOY_ENV_EXAMPLE), encoding="utf-8")
+
+    result = validate_runtime_templates(app_template, deploy_template)
+
+    assert result.ok is False
+    assert ".env.example: HYDRO_SESSION_SECRET must use an angle-bracket placeholder" in result.errors
+    assert ".env.example: HYDRO_DATABASE_PATH must use an angle-bracket placeholder" in result.errors
+    assert ".env.example: HYDRO_BOOTSTRAP_ADMIN_USERNAME must use an angle-bracket placeholder" in result.errors
+    assert ".env.example: HYDRO_ALLOW_DEV_SECRET must stay placeholder-only and must not be 1" in result.errors
+
+
+def test_runtime_config_validator_cli_is_local_template_only():
+    completed = subprocess.run(
+        [sys.executable, "scripts/validate_runtime_config.py"],
+        cwd=PROJECT_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 0
+    assert "Runtime template validation passed for committed templates only." in completed.stdout
+    assert "app.main" not in read(PROJECT_ROOT / "scripts" / "validate_runtime_config.py")
+    assert "os.environ" not in read(PROJECT_ROOT / "scripts" / "validate_runtime_config.py")
+
+
+def test_runtime_config_validator_docs_keep_boundary_visible():
+    combined_docs = read(DEPLOYMENT_DOC) + "\n" + read(PROJECT_ROOT / "deploy" / "README.md")
+
+    assert "py scripts/validate_runtime_config.py" in combined_docs
+    assert "local template preflight only" in combined_docs
+    assert "does not prove production readiness" in combined_docs
 
 
 def test_deployment_examples_do_not_include_real_secrets_or_private_hosts():

@@ -13,6 +13,8 @@ This runbook prepares a future production deployment review. It does not deploy 
 
 Start from `.env.example` or `deploy/env/hydro.env.example` and replace placeholders only in the target environment. The production environment file belongs outside Git at `/etc/hydro/hydro.env`:
 
+Before copying values into any real environment, run `py scripts/validate_runtime_config.py` from the repository root. This command is local template preflight only: it checks committed placeholder templates and does not read real secrets, contact servers, deploy HYDRO, or prove production readiness.
+
 - `HYDRO_SESSION_SECRET` must be a long random secret from a secret manager.
 - `HYDRO_DATABASE_PATH` must point to an absolute production SQLite path owned by the service user.
 - `HYDRO_SESSION_COOKIE_SECURE=1` must be set when HYDRO runs behind TLS.
@@ -68,6 +70,7 @@ Playwright, Selenium, Cypress, screenshots, and CI browser jobs remain deferred 
 
 ## Manual Readiness Checklist
 
+- [ ] `py scripts/validate_runtime_config.py` passes as local template preflight only and does not prove production readiness.
 - [ ] Real secrets are supplied outside Git through the target environment or secret manager.
 - [ ] Exposed credentials have been rotated before use.
 - [ ] TLS and reverse proxy behavior are configured by the operator.

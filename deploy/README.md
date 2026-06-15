@@ -19,12 +19,13 @@ This directory contains example-only runtime artifacts for a later HYDRO product
 
 ## Manual Validation Order
 
-1. Review placeholders and replace them only in the target environment.
-2. Confirm `/etc/hydro/hydro.env` exists outside Git with restrictive permissions.
-3. Confirm the service user owns the SQLite database path and parent directory.
-4. Confirm the reverse proxy owns TLS and the firewall exposes only the proxy entrypoint.
-5. Confirm backup, restore, and rollback decisions before any production change.
-6. Use `GET /healthz` as a liveness-only smoke check through the normal reverse proxy path; it is not a readiness, database, dependency, or authenticated workflow validation endpoint.
-7. Run project validation with `py -m pytest` from a workstation or CI context.
+1. Run `py scripts/validate_runtime_config.py` as local template preflight only; it checks committed placeholders and does not prove production readiness.
+2. Review placeholders and replace them only in the target environment.
+3. Confirm `/etc/hydro/hydro.env` exists outside Git with restrictive permissions.
+4. Confirm the service user owns the SQLite database path and parent directory.
+5. Confirm the reverse proxy owns TLS and the firewall exposes only the proxy entrypoint.
+6. Confirm backup, restore, and rollback decisions before any production change.
+7. Use `GET /healthz` as a liveness-only smoke check through the normal reverse proxy path; it is not a readiness, database, dependency, or authenticated workflow validation endpoint.
+8. Run project validation with `py -m pytest` from a workstation or CI context.
 
 Real deployment values and remote server procedures are intentionally out of scope.
