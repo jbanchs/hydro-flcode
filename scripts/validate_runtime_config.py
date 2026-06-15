@@ -7,6 +7,7 @@ from pathlib import Path
 
 
 REQUIRED_ENV_KEYS = {
+    "HYDRO_ENV",
     "HYDRO_SESSION_SECRET",
     "HYDRO_DATABASE_PATH",
     "HYDRO_SESSION_COOKIE_SECURE",
@@ -15,7 +16,7 @@ REQUIRED_ENV_KEYS = {
     "HYDRO_ALLOW_DEV_SECRET",
 }
 
-PLACEHOLDER_KEYS = REQUIRED_ENV_KEYS - {"HYDRO_SESSION_COOKIE_SECURE"}
+PLACEHOLDER_KEYS = REQUIRED_ENV_KEYS - {"HYDRO_ENV", "HYDRO_SESSION_COOKIE_SECURE"}
 DISPLAY_NAMES = {
     ".env.example": ".env.example",
     "hydro.env.example": "deploy/env/hydro.env.example",
@@ -71,6 +72,8 @@ def validate_template(path: Path) -> list[str]:
 
     if assignments.get("HYDRO_SESSION_COOKIE_SECURE") != "1":
         errors.append(f"{label}: HYDRO_SESSION_COOKIE_SECURE must be 1")
+    if assignments.get("HYDRO_ENV") != "production":
+        errors.append(f"{label}: HYDRO_ENV must be exactly production")
 
     for key in sorted(PLACEHOLDER_KEYS & keys):
         value = assignments[key]

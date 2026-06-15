@@ -13,8 +13,11 @@ REAL_DATABASE_PATH = PROJECT_ROOT / "hydro.db"
 TEST_DATABASE_PATH = PROJECT_ROOT / "tests" / ".tmp_hydro_test.db"
 
 os.environ["HYDRO_DATABASE_PATH"] = str(TEST_DATABASE_PATH)
+os.environ.pop("HYDRO_ENV", None)
 os.environ.setdefault("HYDRO_SESSION_SECRET", "test-session-secret-with-enough-entropy")
 os.environ.setdefault("HYDRO_BOOTSTRAP_ADMIN_PASSWORD", TEST_ADMIN_PASSWORD)
+os.environ.setdefault("HYDRO_SESSION_COOKIE_SECURE", "0")
+os.environ.pop("HYDRO_ALLOW_DEV_SECRET", None)
 
 from fastapi.testclient import TestClient
 

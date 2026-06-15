@@ -27,6 +27,7 @@ ARCHIVED_LOCAL_OPENSPEC_CHANGE_SPEC = (
 )
 
 REQUIRED_ENV_KEYS = {
+    "HYDRO_ENV",
     "HYDRO_SESSION_SECRET",
     "HYDRO_DATABASE_PATH",
     "HYDRO_SESSION_COOKIE_SECURE",
@@ -125,11 +126,23 @@ def test_env_example_exists_with_required_placeholder_only_values():
     assignments = env_assignments()
 
     assert set(assignments) == REQUIRED_ENV_KEYS
+    assert assignments["HYDRO_ENV"] == "production"
     assert assignments["HYDRO_SESSION_COOKIE_SECURE"] == "1"
     for key, value in assignments.items():
-        if key == "HYDRO_SESSION_COOKIE_SECURE":
+        if key in {"HYDRO_ENV", "HYDRO_SESSION_COOKIE_SECURE"}:
             continue
         assert PLACEHOLDER_PATTERN.match(value), f"{key} must use an angle-bracket placeholder"
+
+
+def test_production_signal_guidance_is_documented_in_templates_and_docs():
+    combined_docs = combined_source_text()
+
+    assert "HYDRO_ENV=production" in read(ENV_EXAMPLE)
+    assert "HYDRO_ENV=production" in read(DEPLOY_ENV_EXAMPLE)
+    assert "only production signal" in combined_docs
+    assert "prod" in combined_docs
+    assert "live" in combined_docs
+    assert "Unsupported aliases" in combined_docs
 
 
 def test_runtime_config_validator_accepts_committed_placeholder_templates():
@@ -152,7 +165,8 @@ def test_runtime_config_validator_rejects_key_parity_and_malformed_lines(tmp_pat
     result = validate_runtime_templates(app_template, deploy_template)
 
     assert result.ok is False
-    assert "deploy/env/hydro.env.example: malformed assignment on line 11" in result.errors
+    malformed_line_number = len(read(DEPLOY_ENV_EXAMPLE).splitlines()) + 2
+    assert f"deploy/env/hydro.env.example: malformed assignment on line {malformed_line_number}" in result.errors
     assert ".env.example: unexpected key(s): EXTRA_KEY" in result.errors
 
 
@@ -184,6 +198,20 @@ def test_runtime_config_validator_rejects_real_looking_runtime_values(tmp_path):
     assert ".env.example: HYDRO_DATABASE_PATH must use an angle-bracket placeholder" in result.errors
     assert ".env.example: HYDRO_BOOTSTRAP_ADMIN_USERNAME must use an angle-bracket placeholder" in result.errors
     assert ".env.example: HYDRO_ALLOW_DEV_SECRET must stay placeholder-only and must not be 1" in result.errors
+
+
+def test_runtime_config_validator_rejects_non_production_signal_in_templates(tmp_path):
+    from scripts.validate_runtime_config import validate_runtime_templates
+
+    app_template = tmp_path / ".env.example"
+    deploy_template = tmp_path / "hydro.env.example"
+    app_template.write_text(read(ENV_EXAMPLE).replace("HYDRO_ENV=production", "HYDRO_ENV=prod"), encoding="utf-8")
+    deploy_template.write_text(read(DEPLOY_ENV_EXAMPLE), encoding="utf-8")
+
+    result = validate_runtime_templates(app_template, deploy_template)
+
+    assert result.ok is False
+    assert ".env.example: HYDRO_ENV must be exactly production" in result.errors
 
 
 def test_runtime_config_validator_cli_is_local_template_only():

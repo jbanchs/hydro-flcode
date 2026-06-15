@@ -16,10 +16,13 @@ Start from `.env.example` or `deploy/env/hydro.env.example` and replace placehol
 Before copying values into any real environment, run `py scripts/validate_runtime_config.py` from the repository root. This command is local template preflight only: it checks committed placeholder templates and does not read real secrets, contact servers, deploy HYDRO, or prove production readiness.
 
 - `HYDRO_SESSION_SECRET` must be a long random secret from a secret manager.
+- `HYDRO_ENV=production` is the only production signal. Unsupported aliases include `prod`, `live`, `1`, and `true`.
 - `HYDRO_DATABASE_PATH` must point to an absolute production SQLite path owned by the service user.
 - `HYDRO_SESSION_COOKIE_SECURE=1` must be set when HYDRO runs behind TLS.
 - `HYDRO_BOOTSTRAP_ADMIN_USERNAME` and `HYDRO_BOOTSTRAP_ADMIN_PASSWORD` are optional initial admin values.
 - `HYDRO_ALLOW_DEV_SECRET` is local development only and must not be set in production.
+
+When `HYDRO_ENV=production` is set, HYDRO fails startup before serving requests if the session secret is missing, secure cookies are disabled, development-secret allowance is enabled, or the database path is not an absolute non-default path. This check does not read real environment files, inspect secrets, contact servers, or run deploy automation.
 
 ## Runtime and Process Manager Checklist
 
@@ -63,6 +66,7 @@ Playwright, Selenium, Cypress, screenshots, and CI browser jobs remain deferred 
 - Use SQLite backup and restore tooling selected by the operator; this repository intentionally does not add backup scripts.
 - Document where the backup is stored and how the operator will restore it before proceeding.
 - Define rollback expectations before live changes: stop the service, restore the selected SQLite backup, verify ownership, restart the service, and run a smoke check.
+- To rollback only the production-mode signal, unset or change `HYDRO_ENV` away from `production` after confirming the operator accepts restoring development/test startup behavior.
 
 ## Destructive Initialization Warning
 
@@ -72,6 +76,7 @@ Playwright, Selenium, Cypress, screenshots, and CI browser jobs remain deferred 
 
 - [ ] `py scripts/validate_runtime_config.py` passes as local template preflight only and does not prove production readiness.
 - [ ] Real secrets are supplied outside Git through the target environment or secret manager.
+- [ ] `HYDRO_ENV=production` is set only when production session, cookie, and database expectations are ready.
 - [ ] Exposed credentials have been rotated before use.
 - [ ] TLS and reverse proxy behavior are configured by the operator.
 - [ ] Firewall posture exposes only the intended reverse proxy entrypoint.
