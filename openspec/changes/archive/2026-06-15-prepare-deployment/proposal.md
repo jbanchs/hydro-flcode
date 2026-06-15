@@ -44,7 +44,7 @@ Use the exploration recommendation: keep this first slice documentation/template
 
 | Risk | Likelihood | Mitigation |
 |------|------------|------------|
-| Secrets leak into docs | Med | Use placeholders only; never read `specs/DEPLOY_INFO.md`; state real secrets stay out of Git. |
+| Secrets leak into docs | Med | Use placeholders only; never read the ignored local deployment secret note; state real secrets stay out of Git. |
 | Operator runs destructive DB init | Med | Prominent warning and backup/restore checklist. |
 | Docs imply deployment is complete | Low | Clearly label as readiness-only; no server access or automation. |
 

@@ -3,11 +3,11 @@
 ### Current State
 HYDRO is a small FastAPI/Jinja2/SQLite app with local-run instructions only. Runtime configuration is environment-variable based (`HYDRO_SESSION_SECRET`, `HYDRO_DATABASE_PATH`, `HYDRO_SESSION_COOKIE_SECURE`, optional bootstrap admin credentials), but there is no committed `.env.example`, production configuration guide, process manager unit, reverse proxy/TLS guidance, backup/rollback checklist, or migration strategy. The app already has important browser hardening: HTTP-only Starlette session cookies, `SameSite=Lax`, configurable Secure cookies, CSRF for login/logout, Argon2 password hashing, and same-origin CSP/security headers. CI runs pytest only and explicitly excludes deployment/quality gates.
 
-Sensitive deployment access notes exist in ignored `specs/DEPLOY_INFO.md`; this file was deliberately not read. Deployment must not proceed until exposed server passwords are rotated and secrets are moved out of repo notes into an appropriate secret-management workflow.
+Sensitive deployment access notes exist in an ignored local note; this file was deliberately not read. Deployment must not proceed until exposed server passwords are rotated and secrets are moved out of repo notes into an appropriate secret-management workflow.
 
 ### Affected Areas
 - `README.md` — currently documents local setup and security headers, but lacks production deployment/readiness guidance.
-- `.gitignore` — already ignores `.env`, `.env.*`, databases, archives, and `specs/DEPLOY_INFO.md`; an allowlist exists for `.env.example`.
+- `.gitignore` — already ignores `.env`, `.env.*`, databases, archives, and the local deployment secret note; an allowlist exists for `.env.example`.
 - `requirements.txt` — includes `uvicorn[standard]` but no `gunicorn`; production docs must either use direct `uvicorn` under systemd or add Gunicorn in a later implementation slice.
 - `app/core/config.py` — central environment configuration; production readiness should document required env vars and safe values rather than embedding secrets.
 - `app/main.py` — session cookie security depends on `HYDRO_SESSION_COOKIE_SECURE=1` behind HTTPS.
@@ -34,7 +34,7 @@ Sensitive deployment access notes exist in ignored `specs/DEPLOY_INFO.md`; this 
    - Effort: High
 
 ### Recommendation
-Proceed with Approach 1 as the smallest safe first slice: create a deployment preparation proposal focused on non-secret docs/config templates only. The slice should add `.env.example` with placeholders, production deployment documentation covering systemd + direct `uvicorn` first, reverse proxy/TLS expectations, `HYDRO_SESSION_COOKIE_SECURE=1`, non-root service user, firewall, SQLite production path/backup/restore guidance, destructive `init_db.py` warning, rollback checklist, and secret-handling rules. Do not deploy, do not read or copy `specs/DEPLOY_INFO.md`, do not add CI deploy jobs, and do not include real hostnames, usernames, passwords, IPs, or keys.
+Proceed with Approach 1 as the smallest safe first slice: create a deployment preparation proposal focused on non-secret docs/config templates only. The slice should add `.env.example` with placeholders, production deployment documentation covering systemd + direct `uvicorn` first, reverse proxy/TLS expectations, `HYDRO_SESSION_COOKIE_SECURE=1`, non-root service user, firewall, SQLite production path/backup/restore guidance, destructive `init_db.py` warning, rollback checklist, and secret-handling rules. Do not deploy, do not read or copy the ignored local deployment secret note, do not add CI deploy jobs, and do not include real hostnames, usernames, passwords, IPs, or keys.
 
 Prefer direct `uvicorn app.main:app` under systemd for the first documented path because `uvicorn[standard]` is already in `requirements.txt`. If process-management requirements grow, evaluate adding Gunicorn as a separate implementation slice with dependency/test/docs changes.
 

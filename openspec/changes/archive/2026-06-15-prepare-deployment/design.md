@@ -45,7 +45,7 @@ HYDRO_BOOTSTRAP_ADMIN_PASSWORD=<optional one-time bootstrap password outside Git
 HYDRO_ALLOW_DEV_SECRET=<local development only; do not set in production>
 ```
 
-Docs must use placeholders only, no hostnames/IPs/passwords/keys from private notes, and must not read or reference `specs/DEPLOY_INFO.md`.
+Docs must use placeholders only, no hostnames/IPs/passwords/keys from private notes, and must not read or reference the ignored local deployment secret note.
 
 ## Testing Strategy
 

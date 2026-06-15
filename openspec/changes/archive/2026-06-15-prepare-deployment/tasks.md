@@ -26,7 +26,7 @@ Chain strategy: feature-branch-chain
 ## Phase 1: RED Documentation Guards
 
 - [x] 1.1 Create `tests/test_deployment_docs.py` asserting `.env.example` exists, includes required HYDRO keys, and uses placeholder-only values.
-- [x] 1.2 Add tests rejecting real-looking secrets, private hostnames/IPs, tokens, passwords, and references to `specs/DEPLOY_INFO.md` in docs/examples.
+- [x] 1.2 Add tests rejecting real-looking secrets, private hostnames/IPs, tokens, passwords, and references to the ignored local deployment secret note in docs/examples.
 - [x] 1.3 Add tests requiring `docs/deployment.md` content for TLS/reverse proxy, secure cookies, firewall, non-root service user, SQLite ownership, backup/rollback, and destructive `scripts/init_db.py` warning.
 - [x] 1.4 Add tests requiring `README.md` links to `docs/deployment.md` and `.env.example` and states this is not deploy automation.
 

@@ -9,6 +9,7 @@ ENV_EXAMPLE = PROJECT_ROOT / ".env.example"
 DEPLOYMENT_DOC = PROJECT_ROOT / "docs" / "deployment.md"
 DEPLOY_DIR = PROJECT_ROOT / "deploy"
 README = PROJECT_ROOT / "README.md"
+ARCHIVED_OPENSPEC_MARKDOWN = PROJECT_ROOT / "openspec" / "changes" / "archive"
 
 REQUIRED_ENV_KEYS = {
     "HYDRO_SESSION_SECRET",
@@ -22,6 +23,10 @@ REQUIRED_ENV_KEYS = {
 PLACEHOLDER_PATTERN = re.compile(r"^<[^<>]+>$")
 PRIVATE_OR_HOST_PATTERN = re.compile(
     r"(specs/DEPLOY_INFO\.md|\b(?:\d{1,3}\.){3}\d{1,3}\b|localhost|127\.0\.0\.1|\.local\b|\.lan\b|https?://|ssh://)",
+    re.IGNORECASE,
+)
+SENSITIVE_LOCAL_NOTE_REFERENCE_PATTERN = re.compile(
+    r"(?:specs[/\\]DEPLOY_INFO\.md|DEPLOY_INFO\.md)",
     re.IGNORECASE,
 )
 SECRET_VALUE_PATTERN = re.compile(
@@ -56,6 +61,10 @@ def deployment_source_paths() -> list[Path]:
 
 def deployment_sources() -> dict[Path, str]:
     return {path: read(path) for path in deployment_source_paths()}
+
+
+def archived_openspec_markdown_paths() -> list[Path]:
+    return sorted(ARCHIVED_OPENSPEC_MARKDOWN.rglob("*.md"))
 
 
 def combined_source_text(*, include_readme: bool = False) -> str:
@@ -149,3 +158,34 @@ def test_readme_links_deployment_readiness_without_promising_automation():
     assert ".env.example" in readme
     assert "does not add deployment automation" in readme
     assert "Real secrets must stay outside Git" in readme
+
+
+def test_archived_openspec_markdown_uses_generic_local_secret_note_language():
+    offenders = [
+        path.relative_to(PROJECT_ROOT).as_posix()
+        for path in archived_openspec_markdown_paths()
+        if SENSITIVE_LOCAL_NOTE_REFERENCE_PATTERN.search(read(path))
+    ]
+
+    assert offenders == [], "Archived OpenSpec markdown includes prohibited local secret-note reference(s)"
+
+
+def test_archived_openspec_markdown_allows_generic_local_secret_note_language():
+    archived_content = {
+        path.relative_to(PROJECT_ROOT).as_posix(): read(path)
+        for path in archived_openspec_markdown_paths()
+    }
+    generic_references = [
+        relative_path
+        for relative_path, content in archived_content.items()
+        if "ignored local deployment secret note" in content
+    ]
+
+    assert set(generic_references) == {
+        "openspec/changes/archive/2026-06-15-prepare-deployment/apply-progress.md",
+        "openspec/changes/archive/2026-06-15-prepare-deployment/design.md",
+        "openspec/changes/archive/2026-06-15-prepare-deployment/exploration.md",
+        "openspec/changes/archive/2026-06-15-prepare-deployment/proposal.md",
+        "openspec/changes/archive/2026-06-15-prepare-deployment/tasks.md",
+        "openspec/changes/archive/2026-06-15-prepare-deployment/verify-report.md",
+    }

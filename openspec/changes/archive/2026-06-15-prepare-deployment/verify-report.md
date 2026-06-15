@@ -101,7 +101,7 @@ Coverage analysis skipped — no coverage tool detected/reported for this slice.
 | Decision | Followed? | Notes |
 |----------|-----------|-------|
 | Documentation/template-only readiness slice | ✅ Yes | Changed artifacts stay within `.env.example`, docs, README, tests, and OpenSpec reports. |
-| Do not read/copy/use `specs/DEPLOY_INFO.md` | ✅ Yes | Verification did not open or summarize the forbidden file; generated docs/templates avoid referencing it. |
+| Do not read/copy/use ignored local deployment secret note | ✅ Yes | Verification did not open or summarize the forbidden file; generated docs/templates avoid referencing it. |
 | No executable deployment infrastructure | ✅ Yes | No deploy scripts, process-manager units, provisioning, server config, or CI/CD deploy jobs were added. |
 
 ### Issues Found
