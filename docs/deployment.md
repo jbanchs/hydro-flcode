@@ -11,7 +11,7 @@ This runbook prepares a future production deployment review. It does not deploy 
 
 ## Environment Template
 
-Start from `.env.example` and replace placeholders only in the target environment:
+Start from `.env.example` or `deploy/env/hydro.env.example` and replace placeholders only in the target environment. The production environment file belongs outside Git at `/etc/hydro/hydro.env`:
 
 - `HYDRO_SESSION_SECRET` must be a long random secret from a secret manager.
 - `HYDRO_DATABASE_PATH` must point to an absolute production SQLite path owned by the service user.
@@ -21,13 +21,16 @@ Start from `.env.example` and replace placeholders only in the target environmen
 
 ## Runtime and Process Manager Checklist
 
+- Review `deploy/systemd/hydro.service.example` before adapting a real service file.
 - Run the app with `uvicorn app.main:app` under an operator-managed process manager such as systemd.
 - Run HYDRO as a non-root service user.
 - Ensure the service user owns the SQLite directory and database file.
 - Keep the production environment file readable only by the service account and administrators.
+- Inspect runtime logs through journald after service start, restart, and rollback checks.
 
 ## Reverse Proxy, TLS, and Firewall
 
+- Review `deploy/caddy/Caddyfile.example` as the placeholder reverse proxy template.
 - Put HYDRO behind a reverse proxy that owns HTTPS, TLS termination, and any HSTS policy.
 - Set `HYDRO_SESSION_COOKIE_SECURE=1` behind TLS so browser sessions use secure cookies.
 - Expose only the reverse proxy entrypoint through the firewall.
@@ -36,6 +39,7 @@ Start from `.env.example` and replace placeholders only in the target environmen
 ## SQLite Backup, Restore, and Rollback
 
 - Take a SQLite backup before releases, destructive operations, or any change that may affect production data.
+- Use SQLite backup and restore tooling selected by the operator; this repository intentionally does not add backup scripts.
 - Document where the backup is stored and how the operator will restore it before proceeding.
 - Define rollback expectations before live changes: stop the service, restore the selected SQLite backup, verify ownership, restart the service, and run a smoke check.
 
@@ -53,3 +57,10 @@ Start from `.env.example` and replace placeholders only in the target environmen
 - [ ] SQLite path ownership and permissions are verified.
 - [ ] Backup, restore, and rollback steps are documented before deployment.
 - [ ] `scripts/init_db.py` is not run on live data without accepted destructive-operation intent.
+
+## Runtime Artifact Index
+
+- `deploy/README.md`
+- `deploy/systemd/hydro.service.example`
+- `deploy/env/hydro.env.example`
+- `deploy/caddy/Caddyfile.example`

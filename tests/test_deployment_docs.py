@@ -1,10 +1,13 @@
 import re
 from pathlib import Path
 
+import pytest
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 ENV_EXAMPLE = PROJECT_ROOT / ".env.example"
 DEPLOYMENT_DOC = PROJECT_ROOT / "docs" / "deployment.md"
+DEPLOY_DIR = PROJECT_ROOT / "deploy"
 README = PROJECT_ROOT / "README.md"
 
 REQUIRED_ENV_KEYS = {
@@ -24,10 +27,53 @@ PRIVATE_OR_HOST_PATTERN = re.compile(
 SECRET_VALUE_PATTERN = re.compile(
     r"(sk-[A-Za-z0-9_-]{12,}|ghp_[A-Za-z0-9_]{12,}|AKIA[0-9A-Z]{16}|[A-Za-z0-9+/]{32,}={0,2})"
 )
+FORBIDDEN_AUTOMATION_PATTERN = re.compile(
+    r"(\bssh\s+|scp\s+|rsync\s+|ansible-playbook|terraform\s+apply|kubectl\s+apply|docker\s+stack\s+deploy|github\s+actions\s+deploy|deploy\.sh|backup\.sh|one-shot deploy|server access automation)",
+    re.IGNORECASE,
+)
+REQUIRED_RUNTIME_ARTIFACTS = {
+    "deploy/README.md",
+    "deploy/systemd/hydro.service.example",
+    "deploy/env/hydro.env.example",
+    "deploy/caddy/Caddyfile.example",
+}
 
 
 def read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
+
+
+def deploy_file_paths() -> list[Path]:
+    if not DEPLOY_DIR.exists():
+        return []
+
+    return sorted(path for path in DEPLOY_DIR.rglob("*") if path.is_file())
+
+
+def deployment_source_paths() -> list[Path]:
+    return [ENV_EXAMPLE, DEPLOYMENT_DOC, *deploy_file_paths()]
+
+
+def deployment_sources() -> dict[Path, str]:
+    return {path: read(path) for path in deployment_source_paths()}
+
+
+def combined_source_text(*, include_readme: bool = False) -> str:
+    sources = deployment_sources()
+    if include_readme:
+        sources[README] = read(README)
+
+    return "\n".join(sources.values())
+
+
+def assert_no_forbidden_pattern(pattern: re.Pattern[str], label: str, *, include_readme: bool = False) -> None:
+    for path, content in deployment_sources().items():
+        match = pattern.search(content)
+        assert match is None, f"{path.relative_to(PROJECT_ROOT)} includes forbidden {label}: {match.group(0)}"
+
+    if include_readme:
+        match = pattern.search(read(README))
+        assert match is None, f"{README.relative_to(PROJECT_ROOT)} includes forbidden {label}: {match.group(0)}"
 
 
 def env_assignments() -> dict[str, str]:
@@ -53,19 +99,27 @@ def test_env_example_exists_with_required_placeholder_only_values():
 
 
 def test_deployment_examples_do_not_include_real_secrets_or_private_hosts():
-    deployment_sources = [read(ENV_EXAMPLE), read(DEPLOYMENT_DOC)]
-    combined_docs = "\n".join(deployment_sources)
+    assert_no_forbidden_pattern(PRIVATE_OR_HOST_PATTERN, "host, IP, URL, or private deployment reference")
+    assert_no_forbidden_pattern(SECRET_VALUE_PATTERN, "secret-like token")
+    assert "specs/DEPLOY_INFO.md" not in combined_source_text(include_readme=True)
 
-    assert not PRIVATE_OR_HOST_PATTERN.search(combined_docs)
-    assert not SECRET_VALUE_PATTERN.search(combined_docs)
-    assert "specs/DEPLOY_INFO.md" not in "\n".join([*deployment_sources, read(README)])
+
+def test_required_runtime_artifact_paths_are_declared_for_manual_review():
+    combined_docs = combined_source_text(include_readme=True)
+
+    for artifact in REQUIRED_RUNTIME_ARTIFACTS:
+        assert (PROJECT_ROOT / artifact).exists()
+        assert artifact in combined_docs
 
 
 def test_deployment_runbook_covers_runtime_security_and_sqlite_operations():
-    deployment_doc = read(DEPLOYMENT_DOC)
+    combined_docs = combined_source_text()
 
     required_phrases = [
         "does not deploy",
+        "/etc/hydro/hydro.env",
+        "uvicorn app.main:app",
+        "journald",
         "reverse proxy",
         "TLS",
         "HYDRO_SESSION_COOKIE_SECURE=1",
@@ -81,7 +135,11 @@ def test_deployment_runbook_covers_runtime_security_and_sqlite_operations():
     ]
 
     for phrase in required_phrases:
-        assert phrase in deployment_doc
+        assert phrase in combined_docs
+
+
+def test_deployment_readiness_rejects_server_access_and_deploy_automation():
+    assert_no_forbidden_pattern(FORBIDDEN_AUTOMATION_PATTERN, "server access or deploy automation")
 
 
 def test_readme_links_deployment_readiness_without_promising_automation():

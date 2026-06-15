@@ -1,0 +1,19 @@
+[Unit]
+Description=HYDRO application service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=hydro
+Group=hydro
+WorkingDirectory=<absolute-application-directory>
+EnvironmentFile=/etc/hydro/hydro.env
+ExecStart=<venv-python-or-uvicorn> -m uvicorn app.main:app --host <private-bind-host> --port <private-port>
+Restart=on-failure
+RestartSec=5s
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

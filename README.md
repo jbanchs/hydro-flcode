@@ -60,7 +60,7 @@ py -m pytest
 
 ## Deployment Readiness
 
-Deployment preparation is documented in [`docs/deployment.md`](docs/deployment.md), with placeholder-only environment examples in [`.env.example`](.env.example). This readiness slice does not add deployment automation, server provisioning, CI/CD deploy jobs, or executable infrastructure.
+Deployment preparation is documented in [`docs/deployment.md`](docs/deployment.md), with placeholder-only environment examples in [`.env.example`](.env.example) and the runtime artifact index at [`deploy/README.md`](deploy/README.md). Runtime examples include `deploy/systemd/hydro.service.example`, `deploy/env/hydro.env.example`, and `deploy/caddy/Caddyfile.example`. This readiness slice does not add deployment automation, server provisioning, CI/CD deploy jobs, or executable infrastructure.
 
 Real secrets must stay outside Git and must be supplied through the target environment or secret manager. Rotate any exposed credentials before production use.
 

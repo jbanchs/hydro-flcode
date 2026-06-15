@@ -1,0 +1,6 @@
+<public-domain-placeholder> {
+    encode zstd gzip
+
+    # Caddy manages public TLS for this site.
+    reverse_proxy <private-bind-host>:<private-port>
+}

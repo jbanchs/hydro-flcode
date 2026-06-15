@@ -15,9 +15,11 @@ build/
 .venv/
 venv/
 env/
+!deploy/env/
 .env
 .env.*
 !.env.example
+!deploy/env/hydro.env.example
 
 # Node/opencode local dependencies
 node_modules/
