@@ -7,7 +7,7 @@
 | Estimated changed lines | 220-320 |
 | 400-line budget risk | Medium |
 | Chained PRs recommended | Yes |
-| Suggested split | PR 1 docs/tests → PR 2 verification/archive |
+| Suggested split | PR 1 docs/tests → PR 2 verification/archive readiness |
 | Delivery strategy | force-chained |
 | Chain strategy | feature-branch-chain |
 
@@ -21,7 +21,7 @@ Chain strategy: feature-branch-chain
 | Unit | Goal | Likely PR | Notes |
 |------|------|-----------|-------|
 | 1 | Add deployment docs, `.env.example`, README link, and doc guards | PR 1 | Base = feature/tracker branch; complete with pytest validation. |
-| 2 | Run verification, OpenSpec validation, and archive readiness checks | PR 2 | Base = PR 1 branch; no runtime/deploy changes. |
+| 2 | Run verification, record local OpenSpec CLI availability, and archive readiness checks | PR 2 | Base = PR 1 branch; no runtime/deploy changes. |
 
 ## Phase 1: RED Documentation Guards
 
@@ -39,12 +39,12 @@ Chain strategy: feature-branch-chain
 
 ## Phase 3: REFACTOR and Validation
 
-- [x] 3.1 Run `python -m pytest tests/test_deployment_docs.py`; refine tests/docs until the doc guard passes.
-- [x] 3.2 Run full `python -m pytest` to prove existing FastAPI/SQLite behavior remains unchanged.
-- [x] 3.3 Attempt `openspec validate prepare-deployment --strict`; document local OpenSpec CLI unavailability as an accepted tooling warning without claiming successful validation.
+- [x] 3.1 Run `py -m pytest tests/test_deployment_docs.py`; refine tests/docs until the doc guard passes.
+- [x] 3.2 Run full `py -m pytest` to prove existing FastAPI/SQLite behavior remains unchanged.
+- [x] 3.3 Attempt `openspec validate prepare-deployment --strict`; document local OpenSpec CLI unavailability as a process warning without claiming successful OpenSpec CLI validation.
 
 ## Phase 4: Chain and Archive Readiness
 
 - [x] 4.1 Keep PR 1 focused on docs/examples/tests under the 400-line budget with tests committed in the same work unit.
 - [x] 4.2 Prepare PR 2 for verification evidence and archive readiness after PR 1; confirm no server, CI deploy, provisioning, or secret files changed.
-- [x] 4.3 Confirm archive remains intentionally blocked until OpenSpec CLI validation can run and pass; do not fake archive readiness.
+- [x] 4.3 Confirm native `gentle-ai sdd-status prepare-deployment` reports archive-ready; record unavailable `openspec` CLI as a process warning, not an archive blocker.

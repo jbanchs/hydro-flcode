@@ -52,7 +52,7 @@ Docs must use placeholders only, no hostnames/IPs/passwords/keys from private no
 | Layer | What to Test | Approach |
 |-------|-------------|----------|
 | Unit | Documentation content invariants | Add pytest file-content checks for required env names, placeholder-only examples, and absence of obvious secret values. |
-| Integration | Existing app behavior unaffected | Run `python -m pytest`; no app code changes expected. |
+| Integration | Existing app behavior unaffected | Run `py -m pytest` locally; no app code changes expected. CI continues to use `python -m pytest` per `openspec/config.yaml`. |
 | E2E | Manual deployment checklist clarity | No browser E2E tooling; docs include manual validation commands/checklist only. |
 
 ## Migration / Rollout

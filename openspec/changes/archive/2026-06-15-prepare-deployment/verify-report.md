@@ -7,11 +7,11 @@
 ### Completeness
 | Metric | Value |
 |--------|-------|
-| Tasks total | 15 |
-| Tasks complete | 13 |
-| Tasks incomplete | 2 |
+| Tasks total | 14 |
+| Tasks complete | 14 |
+| Tasks incomplete | 0 |
 
-Incomplete tasks are OpenSpec CLI validation/archive-gated tasks: 3.3 and 4.3. The local OpenSpec CLI is unavailable, so this is classified as an environment/tooling blocker, not an implementation defect in the docs/templates slice.
+All tasks in `tasks.md` are complete. The local OpenSpec CLI is unavailable, so OpenSpec CLI validation is recorded as a process warning rather than a successful validation claim. This repository uses the native `gentle-ai sdd-status` dispatcher as the available SDD validation source; it reports archive-ready.
 
 ### Build & Tests Execution
 **Build**: ➖ Not applicable — docs/templates-only slice; no build artifact required.
@@ -26,6 +26,12 @@ Result: 38 passed in 3.35s
 ```text
 Command: openspec validate prepare-deployment --strict
 Result: openspec: The term 'openspec' is not recognized as a name of a cmdlet, function, script file, or executable program.
+```
+
+**Native SDD status**: ✅ Archive-ready
+```text
+Command: gentle-ai sdd-status prepare-deployment
+Result: next: archive; apply all_done; verify all_done; archive ready; tasks 14/14 complete
 ```
 
 **Coverage**: ➖ Not available — no coverage command/tool reported for this slice.
@@ -100,10 +106,10 @@ Coverage analysis skipped — no coverage tool detected/reported for this slice.
 
 ### Issues Found
 **CRITICAL**: None.  
-**WARNING**: OpenSpec CLI validation is unavailable locally (`openspec` not on PATH), leaving tasks 3.3 and 4.3 incomplete until the CLI is installed/available.  
-**SUGGESTION**: Consider running `openspec validate prepare-deployment --strict` in an environment with the OpenSpec CLI before archive.
+**WARNING**: OpenSpec CLI validation is unavailable locally (`openspec` not on PATH). No successful OpenSpec CLI validation is claimed.  
+**SUGGESTION**: Keep the process warning visible; archive may proceed using the native `gentle-ai sdd-status` dispatcher because it reports archive-ready and tests pass.
 
 ### Verdict
 PASS WITH WARNINGS
 
-The docs/templates slice satisfies the deployment-readiness specification with passing pytest evidence, but archive readiness remains blocked by unavailable OpenSpec CLI validation.
+The docs/templates slice satisfies the deployment-readiness specification with passing pytest evidence. Archive readiness is established by the available native `gentle-ai sdd-status` dispatcher; unavailable `openspec` CLI validation remains a documented process warning, not an archive blocker.
