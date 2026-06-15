@@ -58,6 +58,12 @@ http://127.0.0.1:8000
 py -m pytest
 ```
 
+## Deployment Readiness
+
+Deployment preparation is documented in [`docs/deployment.md`](docs/deployment.md), with placeholder-only environment examples in [`.env.example`](.env.example). This readiness slice does not add deployment automation, server provisioning, CI/CD deploy jobs, or executable infrastructure.
+
+Real secrets must stay outside Git and must be supplied through the target environment or secret manager. Rotate any exposed credentials before production use.
+
 ## Browser Security Headers
 
 HYDRO sets browser security headers on rendered pages and API responses through FastAPI middleware:
