@@ -58,6 +58,19 @@ http://127.0.0.1:8000
 py -m pytest
 ```
 
+## Local browser smoke checklist
+
+Use this checklist for local confidence while GitHub Actions is blocked by billing. It is not deploy automation, not a CI fix, and does not require Playwright, Selenium, Cypress, screenshots, remote services, or real secrets.
+
+1. Start HYDRO locally with safe placeholder development values, then run `py -m pytest`.
+2. Open `http://127.0.0.1:8000/healthz` and confirm it returns the liveness JSON only; do not treat it as database, auth, dependency, or readiness validation.
+3. Open `http://127.0.0.1:8000/login` and confirm the page is readable, styled by `/static/css/styles.css`, and operable.
+4. Sign in with the local test/development admin account and confirm authenticated `/` renders the regulation search workflow and Ask HYDRO panel.
+5. Search from the regulation table and confirm results refresh without a full page failure, with readable rows, badges, and empty-result feedback.
+6. Ask HYDRO a question that has source-backed information and confirm the answer is readable and citation-first.
+7. Ask a question with missing or unsupported information and confirm HYDRO clearly states that the answer cannot be confirmed from available sources.
+8. In browser developer tools, confirm CSS and JavaScript load from same-origin `/static/...` paths and that no CDN script/style request is required.
+
 ## Deployment Readiness
 
 Deployment preparation is documented in [`docs/deployment.md`](docs/deployment.md), with placeholder-only environment examples in [`.env.example`](.env.example) and the runtime artifact index at [`deploy/README.md`](deploy/README.md). Runtime examples include `deploy/systemd/hydro.service.example`, `deploy/env/hydro.env.example`, and `deploy/caddy/Caddyfile.example`. This readiness slice does not add deployment automation, server provisioning, CI/CD deploy jobs, or executable infrastructure.
@@ -75,7 +88,7 @@ HYDRO sets browser security headers on rendered pages and API responses through 
 
 The current CSP allows only same-origin templates and static frontend assets for scripts and styles. Tailwind CDN has been removed; HYDRO now uses app-owned static CSS from `/static/css/styles.css` for the login page, authenticated app shell, regulation table, and Ask HYDRO dynamic states. CDNJS/GSAP is not required by the frontend or allowed by `script-src`.
 
-Manual visual smoke checks are required after CSS changes because this project has no browser E2E tooling. Validate that `/login` remains readable and operable, authenticated `/` remains readable, search refresh preserves distinguishable regulation rows and badges, and Ask HYDRO answer and missing-information states are legible without external CDN assets.
+Manual visual smoke checks are required after CSS changes because this project has no browser E2E tooling. Use the local browser smoke checklist above to validate that `/healthz` stays liveness-only, `/login` remains readable and operable, authenticated `/` remains readable, search refresh preserves distinguishable regulation rows and badges, Ask HYDRO answer and missing-information states are legible, and CSS/JS load from local `/static` assets without CDN dependencies.
 
 Rollback is limited to reverting the frontend asset removal and `app/core/security_headers.py`; this restores the previous response header and cosmetic animation behavior without changing auth, CSRF, API, database, or frequency logic.
 

@@ -32,6 +32,21 @@ Start from `.env.example` or `deploy/env/hydro.env.example` and replace placehol
 
 Use `GET /healthz` as a liveness-only smoke check after service start, restart, reverse-proxy changes, and rollback checks. It returns static non-sensitive JSON and is not a readiness, database, dependency, or authenticated workflow validation endpoint.
 
+## Local Browser Smoke Checklist
+
+Use this local-only checklist for pre-deploy confidence while GitHub Actions is blocked by billing. It complements `py -m pytest`; it does not replace CI, create deployment automation, contact remote services, require browser automation, or require real secrets.
+
+- [ ] Run HYDRO locally with placeholder development/test configuration only, then run `py -m pytest`.
+- [ ] Open `/healthz` and confirm it returns liveness JSON only. Keep readiness, database, dependency, and authenticated workflow checks separate.
+- [ ] Open `/login` and confirm the page is readable, styled, and usable with local `/static/css/styles.css`.
+- [ ] Sign in locally and confirm authenticated `/` renders the regulation search workflow and Ask HYDRO panel.
+- [ ] Run a search and confirm the table refreshes with readable rows, badges, and empty-result feedback when applicable.
+- [ ] Ask HYDRO a source-backed question and confirm the answer is readable and citation-first.
+- [ ] Ask HYDRO for missing or unsupported information and confirm the UI states that the answer cannot be confirmed from available sources.
+- [ ] In browser developer tools, confirm CSS and JavaScript load from same-origin `/static/...` assets and no CDN script/style request is required.
+
+Playwright, Selenium, Cypress, screenshots, and CI browser jobs remain deferred for this slice. Move those tools to a follow-up proposal if repeated UI regressions or pre-production readiness justify the added dependency and review cost.
+
 ## Reverse Proxy, TLS, and Firewall
 
 - Review `deploy/caddy/Caddyfile.example` as the placeholder reverse proxy template.
@@ -62,6 +77,7 @@ Use `GET /healthz` as a liveness-only smoke check after service start, restart, 
 - [ ] Backup, restore, and rollback steps are documented before deployment.
 - [ ] `scripts/init_db.py` is not run on live data without accepted destructive-operation intent.
 - [ ] `/healthz` liveness-only smoke check is reachable through the normal reverse proxy path.
+- [ ] Local browser smoke checklist has been completed with placeholder-only configuration and no real secrets recorded in tracked files.
 
 ## Runtime Artifact Index
 
