@@ -87,6 +87,41 @@ REQUIRED_BACKUP_RESTORE_BOUNDARIES = [
     "Do not contact servers or run remote access commands.",
     "Do not add backup scripts, restore scripts, app backup logic, or destructive restore automation.",
 ]
+REQUIRED_STAGING_HANDOFF_CONCEPTS = [
+    "repo-local staging handoff checklist",
+    "HYDRO_ENV=production",
+    "production-like staging validation",
+    "staging-specific secret values",
+    "supplied outside Git",
+]
+REQUIRED_STAGING_DRY_RUN_CONCEPTS = [
+    "staging dry-run checklist",
+    "placeholder-only",
+    "py scripts/validate_runtime_config.py",
+    "py -m pytest",
+]
+REQUIRED_STAGING_MANUAL_VALIDATION_CONCEPTS = [
+    "manual staging validation runbook",
+    "/healthz",
+    "liveness-only",
+    "/login",
+    "authenticated /",
+    "search",
+    "Ask HYDRO",
+    "logs",
+    "rollback",
+    "backup",
+]
+REQUIRED_STAGING_SCOPE_BOUNDARIES = [
+    "Do not introduce HYDRO_ENV=staging.",
+    "Do not deploy HYDRO, contact servers, probe staging hosts, or add deploy automation.",
+    "Do not read real environment files, secrets, ignored sensitive notes, staging data, or hydro.db.",
+    "Do not add scripts, CI gates, server probes, app code, runtime modes, or readiness semantics for /healthz.",
+]
+FORBIDDEN_STAGING_SCOPE_PATTERN = re.compile(
+    r"(HYDRO_ENV\s*=\s*staging|\bssh\s+|\bscp\s+|server probe|probe staging|deploy\.sh)",
+    re.IGNORECASE,
+)
 
 
 def read(path: Path) -> str:
@@ -332,6 +367,54 @@ def test_sqlite_backup_restore_guidance_rejects_live_access_and_destructive_auto
         assert boundary in backup_restore_guidance
 
     assert FORBIDDEN_BACKUP_RESTORE_AUTOMATION_PATTERN.search(backup_restore_guidance) is None
+
+
+def test_staging_handoff_documents_production_like_runtime_and_external_secrets():
+    deployment_doc = read(DEPLOYMENT_DOC)
+    deploy_readme = read(DEPLOY_README)
+
+    for concept in REQUIRED_STAGING_HANDOFF_CONCEPTS:
+        assert concept in deployment_doc
+
+    assert "staging readiness" in deploy_readme
+    assert "HYDRO_ENV=production" in deploy_readme
+    assert "staging-specific secret values" in deploy_readme
+
+
+def test_staging_dry_run_uses_local_placeholder_only_validation():
+    deployment_doc = read(DEPLOYMENT_DOC)
+
+    for concept in REQUIRED_STAGING_DRY_RUN_CONCEPTS:
+        assert concept in deployment_doc
+
+    assert "no real secrets, environment files, servers, deployment targets, or hydro.db" in deployment_doc
+
+
+def test_manual_staging_validation_runbook_covers_operator_checks_without_readiness_healthz():
+    deployment_doc = read(DEPLOYMENT_DOC)
+
+    for concept in REQUIRED_STAGING_MANUAL_VALIDATION_CONCEPTS:
+        assert concept in deployment_doc
+
+    assert "citation-backed Ask HYDRO behavior" in deployment_doc
+    assert "operator-owned" in deployment_doc
+    assert FORBIDDEN_HEALTHZ_READINESS_PATTERN.search(deployment_doc) is None
+
+
+def test_staging_readiness_rejects_scope_expansion_and_staging_runtime_mode():
+    staging_guidance = read(DEPLOYMENT_DOC) + "\n" + read(DEPLOY_README)
+    allowed_scope_boundary_language = "Do not add scripts, CI gates, server probes, app code, runtime modes, or readiness semantics for /healthz."
+    allowed_dry_run_scope_language = "Confirm no new deployment scripts, CI gates, server probes, app code, or runtime modes were added for staging."
+    allowed_runtime_boundary_language = "Do not introduce HYDRO_ENV=staging."
+    allowed_deploy_boundary_language = "Do not deploy HYDRO, contact servers, probe staging hosts, or add deploy automation."
+    checked_guidance = staging_guidance.replace(allowed_scope_boundary_language, "")
+    checked_guidance = checked_guidance.replace(allowed_dry_run_scope_language, "").replace(allowed_runtime_boundary_language, "").replace(allowed_deploy_boundary_language, "")
+
+    for boundary in REQUIRED_STAGING_SCOPE_BOUNDARIES:
+        assert boundary in staging_guidance
+
+    assert "hydro.db" in staging_guidance
+    assert FORBIDDEN_STAGING_SCOPE_PATTERN.search(checked_guidance) is None
 
 
 def test_deployment_readiness_rejects_server_access_and_deploy_automation():

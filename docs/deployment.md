@@ -52,6 +52,50 @@ Use this local-only checklist for pre-deploy confidence while GitHub Actions is 
 
 Playwright, Selenium, Cypress, screenshots, and CI browser jobs remain deferred for this slice. Move those tools to a follow-up proposal if repeated UI regressions or pre-production readiness justify the added dependency and review cost.
 
+## Staging Readiness Handoff
+
+Use this repo-local staging handoff checklist for first MVP validation. Staging is production-like staging validation: run HYDRO with `HYDRO_ENV=production` and staging-specific secret values supplied outside Git by the operator.
+
+This section is a documentation handoff only. It does not deploy HYDRO, contact servers, inspect private infrastructure, or prove production readiness.
+
+### Staging handoff checklist
+
+- [ ] Confirm the target staging runtime will use `HYDRO_ENV=production`; do not create a separate staging runtime mode.
+- [ ] Confirm staging-specific secret values are supplied outside Git through the target environment or secret manager.
+- [ ] Confirm every tracked template remains placeholder-only and generic.
+- [ ] Confirm `/healthz` remains a liveness-only smoke check, not readiness validation.
+- [ ] Confirm the operator owns any out-of-band deployment, server configuration, secret injection, backup process, and rollback execution.
+
+### Staging dry-run checklist
+
+Use this staging dry-run checklist locally before handoff. It is placeholder-only, non-deploying, and repo-local.
+
+- [ ] Run `py scripts/validate_runtime_config.py` from the repository root.
+- [ ] Run `py -m pytest` from the repository root.
+- [ ] Confirm the dry run uses no real secrets, environment files, servers, deployment targets, or hydro.db.
+- [ ] Confirm no new deployment scripts, CI gates, server probes, app code, or runtime modes were added for staging.
+
+### Manual staging validation runbook
+
+After staging has already been deployed outside this repository slice, the operator-owned manual staging validation runbook is:
+
+- [ ] Open `/healthz` and confirm it returns liveness-only JSON; keep database, dependency, readiness, and authenticated workflow validation separate.
+- [ ] Open `/login` and confirm the login page is reachable, readable, and served with same-origin static assets.
+- [ ] Sign in and confirm authenticated / renders the regulation search workflow and Ask HYDRO panel.
+- [ ] Run a search and confirm results, empty-result feedback, and table readability.
+- [ ] Ask HYDRO a citation-backed question and confirm citation-backed Ask HYDRO behavior.
+- [ ] Ask HYDRO for unsupported information and confirm it says the answer cannot be confirmed from available sources.
+- [ ] Inspect logs through the operator-managed logging path for startup, authentication, search, Ask HYDRO, and error signals.
+- [ ] Confirm rollback instructions, owner, and decision point are known before any production promotion.
+- [ ] Confirm backup location, restore owner, and non-destructive restore rehearsal evidence exist outside Git.
+
+Staging scope boundaries:
+
+- Do not introduce HYDRO_ENV=staging.
+- Do not deploy HYDRO, contact servers, probe staging hosts, or add deploy automation.
+- Do not read real environment files, secrets, ignored sensitive notes, staging data, or hydro.db.
+- Do not add scripts, CI gates, server probes, app code, runtime modes, or readiness semantics for /healthz.
+
 ## Reverse Proxy, TLS, and Firewall
 
 - Review `deploy/caddy/Caddyfile.example` as the placeholder reverse proxy template.
