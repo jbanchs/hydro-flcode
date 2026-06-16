@@ -96,6 +96,53 @@ Staging scope boundaries:
 - Do not read real environment files, secrets, ignored sensitive notes, staging data, or hydro.db.
 - Do not add scripts, CI gates, server probes, app code, runtime modes, or readiness semantics for /healthz.
 
+## Manual Staging Server Bootstrap Prerequisites
+
+Use this checklist before any later approved staging deployment work. It is documentation-only and manual operator-run on the server; this repository does not access the server, deploy HYDRO, add scripts, change CI, configure Caddy, configure systemd, read secrets, read real environment files, or read real databases.
+
+### Audited target facts
+
+| Fact | Recorded value | Operator note |
+|------|----------------|---------------|
+| Operating system | Ubuntu 22.04 | Use Ubuntu package names and commands when the operator is already in an approved shell session. |
+| Package manager | `apt` | Package examples are manual operator-run on the server, not repository automation. |
+| Process manager available | `systemctl` | Verification only; no systemd configuration is changed in this slice. |
+| Privilege boundary | passworded sudo | The operator must enter the sudo password interactively and never record, echo, store, request, or commit sudo passwords. |
+| Python audit fact | Python 3.10 | Python 3.10 is an audited server fact, not compatibility approval for HYDRO's Python 3.13 baseline. |
+| Missing package | missing git | Treat `git` as an operator-installed prerequisite. |
+| Missing package | missing Caddy | Caddy is deferred; if later approved, keep it package-only and unconfigured until a separate ingress/TLS change. |
+| Missing package | missing sqlite3 | Treat `sqlite3` as an operator-installed prerequisite. |
+| Disk | 20G disk | Confirm available capacity before staging work. |
+| Memory | 2GiB RAM | Confirm available memory before staging work. |
+
+### Minimal prerequisite checklist
+
+The minimal prerequisites for a later approved staging bootstrap are operator-installed prerequisites only:
+
+- [ ] `git`
+- [ ] `python3-venv`
+- [ ] `sqlite3`
+
+If installation is approved out of band, the operator may run package commands manually in their authorized shell session, for example `sudo apt update` and `sudo apt install git python3-venv sqlite3`. These commands are documentation-only examples; they are not scripts, not CI, not remote commands, and not deployment automation.
+
+Use key-based authentication for any later approved server access. Do not place key material, hostnames, credentials, or access instructions in this repository.
+
+### Operator-run verification checklist
+
+Run these commands only from the operator's approved shell session on the target host:
+
+- [ ] Python: `python3 --version`
+- [ ] Virtual environment support: `python3 -m venv --help`
+- [ ] Git: `git --version`
+- [ ] SQLite CLI: `sqlite3 --version`
+- [ ] systemd tooling: `systemctl --version`
+- [ ] apt tooling: `apt --version`
+- [ ] sudo boundary: `sudo -v`
+- [ ] Disk capacity: `df -h`
+- [ ] Memory capacity: `free -h`
+
+Caddy is deferred in this bootstrap slice. Do not create or modify Caddyfiles, systemd units, firewall rules, TLS settings, deployment scripts, CI jobs, secrets, real environment files, or real database files here.
+
 ## Reverse Proxy, TLS, and Firewall
 
 - Review `deploy/caddy/Caddyfile.example` as the placeholder reverse proxy template.

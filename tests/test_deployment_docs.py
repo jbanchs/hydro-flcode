@@ -118,8 +118,44 @@ REQUIRED_STAGING_SCOPE_BOUNDARIES = [
     "Do not read real environment files, secrets, ignored sensitive notes, staging data, or hydro.db.",
     "Do not add scripts, CI gates, server probes, app code, runtime modes, or readiness semantics for /healthz.",
 ]
+REQUIRED_STAGING_BOOTSTRAP_FACTS = [
+    "Ubuntu 22.04",
+    "apt",
+    "systemctl",
+    "passworded sudo",
+    "Python 3.10",
+    "missing git",
+    "missing Caddy",
+    "missing sqlite3",
+    "20G disk",
+    "2GiB RAM",
+]
+REQUIRED_STAGING_BOOTSTRAP_PACKAGES = ["git", "python3-venv", "sqlite3"]
+REQUIRED_STAGING_BOOTSTRAP_VERIFICATION_COMMANDS = [
+    "python3 --version",
+    "python3 -m venv --help",
+    "git --version",
+    "sqlite3 --version",
+    "systemctl --version",
+    "apt --version",
+    "sudo -v",
+    "df -h",
+    "free -h",
+]
+REQUIRED_STAGING_BOOTSTRAP_BOUNDARIES = [
+    "manual operator-run on the server",
+    "Caddy is deferred",
+    "Python 3.10 is an audited server fact, not compatibility approval for HYDRO's Python 3.13 baseline.",
+    "enter the sudo password interactively",
+    "never record, echo, store, request, or commit sudo passwords",
+    "Use key-based authentication for any later approved server access",
+]
 FORBIDDEN_STAGING_SCOPE_PATTERN = re.compile(
     r"(HYDRO_ENV\s*=\s*staging|\bssh\s+|\bscp\s+|server probe|probe staging|deploy\.sh)",
+    re.IGNORECASE,
+)
+FORBIDDEN_BOOTSTRAP_SCOPE_PATTERN = re.compile(
+    r"(\bssh\s+|\bscp\s+|deploy\.sh|bootstrap\.sh|github\s+actions\s+deploy|read\s+real\s+(?:environment|env|database|db)|Caddyfile\s+configuration|systemd\s+configuration|configure\s+Caddy|configure\s+systemd)",
     re.IGNORECASE,
 )
 
@@ -415,6 +451,53 @@ def test_staging_readiness_rejects_scope_expansion_and_staging_runtime_mode():
 
     assert "hydro.db" in staging_guidance
     assert FORBIDDEN_STAGING_SCOPE_PATTERN.search(checked_guidance) is None
+
+
+def test_staging_bootstrap_documents_audited_facts_and_manual_packages():
+    deployment_doc = read(DEPLOYMENT_DOC)
+
+    for fact in REQUIRED_STAGING_BOOTSTRAP_FACTS:
+        assert fact in deployment_doc
+
+    for package in REQUIRED_STAGING_BOOTSTRAP_PACKAGES:
+        assert package in deployment_doc
+
+    assert "operator-installed prerequisites" in deployment_doc
+    assert "minimal prerequisites" in deployment_doc
+
+
+def test_staging_bootstrap_documents_operator_run_verification_commands():
+    deployment_doc = read(DEPLOYMENT_DOC)
+
+    for command in REQUIRED_STAGING_BOOTSTRAP_VERIFICATION_COMMANDS:
+        assert command in deployment_doc
+
+    assert "manual operator-run on the server" in deployment_doc
+    assert "documentation-only" in deployment_doc
+
+
+def test_staging_bootstrap_keeps_security_and_scope_boundaries_visible():
+    bootstrap_guidance = read(DEPLOYMENT_DOC) + "\n" + read(DEPLOY_README)
+    allowed_boundary_language = "Do not add scripts, CI gates, server probes, app code, runtime modes, or readiness semantics for /healthz."
+    allowed_top_boundary_language = "does not access the server, deploy HYDRO, add scripts, change CI, configure Caddy, configure systemd, read secrets, read real environment files, or read real databases."
+    allowed_environment_boundary_language = "does not read real secrets, contact servers, deploy HYDRO, or prove production readiness."
+    allowed_runtime_config_boundary_language = "does not read real environment files, inspect secrets, contact servers, or run deploy automation."
+    allowed_systemd_verification_language = "Verification only; no systemd configuration is changed in this slice."
+    allowed_staging_boundary_language = "Do not read real environment files, secrets, ignored sensitive notes, staging data, or hydro.db."
+    allowed_backup_boundary_language = "Do not read real environment files, secrets, ignored sensitive notes, or production data."
+    checked_guidance = bootstrap_guidance.replace(allowed_boundary_language, "")
+    checked_guidance = checked_guidance.replace(allowed_top_boundary_language, "")
+    checked_guidance = checked_guidance.replace(allowed_environment_boundary_language, "")
+    checked_guidance = checked_guidance.replace(allowed_runtime_config_boundary_language, "")
+    checked_guidance = checked_guidance.replace(allowed_systemd_verification_language, "")
+    checked_guidance = checked_guidance.replace(allowed_staging_boundary_language, "")
+    checked_guidance = checked_guidance.replace(allowed_backup_boundary_language, "")
+
+    for boundary in REQUIRED_STAGING_BOOTSTRAP_BOUNDARIES:
+        assert boundary in bootstrap_guidance
+
+    assert "package-only and unconfigured" in bootstrap_guidance
+    assert FORBIDDEN_BOOTSTRAP_SCOPE_PATTERN.search(checked_guidance) is None
 
 
 def test_deployment_readiness_rejects_server_access_and_deploy_automation():
